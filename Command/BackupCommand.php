@@ -47,7 +47,7 @@ class BackupCommand extends AbstractCommand
             ],
             [
                 'description' => 'create the mysql dump',
-                'cmd' => new Process('mysqldump -u '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.username').' --password='.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.password').' -h '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.host').' '.\Pimcore::getContainer('pimcore_system_config.database.params.dbname').' -r '.$tmpDatabaseDump)
+                'cmd' => new Process('mysqldump -u '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.username').' --password='.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.password').' -h '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.host').' '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.dbname').' -r '.$tmpDatabaseDump)
             ],
             [
                 'description' => 'put the dump into the tar archive',
