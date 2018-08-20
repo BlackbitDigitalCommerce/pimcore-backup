@@ -29,44 +29,40 @@ class RestoreCommand extends AbstractCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var Command $clearCacheCommand */
-        $clearCacheCommand = $this->getApplication()->find('clear:cache');
         $steps = [
             [
-                'description' => 'copy backup file to /tmp',
-                'cmd' => new Process('cp "'.$input->getArgument('file').'" /tmp/backup.tar.gz')
-            ],
-            [
                 'description' => 'unzip backup to '.PIMCORE_PROJECT_ROOT,
-                'cmd' => new Process('tar -xzf /tmp/backup.tar.gz -C '.PIMCORE_PROJECT_ROOT)
+                'cmd' => new Process('tar -xzf "'.$input->getArgument('file').'" -C '.PIMCORE_PROJECT_ROOT)
             ],
             [
                 'description' => 'restore database',
-                'cmd' => new Process('mysql -u '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.username').' --password='.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.password').' -h '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.host').' '.\Pimcore::getContainer('pimcore_system_config.database.params.dbname').' < '.PIMCORE_PROJECT_ROOT.'/backup.sql')
+                'cmd' => new Process('mysql -u '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.username').' --password='.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.password').' -h '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.host').' '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.dbname').' < '.PIMCORE_PROJECT_ROOT.'/backup.sql')
             ],
             [
                 'description' => 'remove database dump file',
-                'cmd' => 'rm '.PIMCORE_PROJECT_ROOT.'/backup.sql'
+                'cmd' => new Process('rm '.PIMCORE_PROJECT_ROOT.'/backup.sql')
             ],
             [
                 'description' => 'clear cache',
-                'cmd' => $clearCacheCommand
+                'cmd' => new Process(PIMCORE_PROJECT_ROOT.'/bin/console cache:clear')
             ]
         ];
 
         $progressBar = new ProgressBar($output, \count($steps));
+        $progressBar->setMessage('Starting ...');
+        $progressBar->setFormat('%current%/%max% [%bar%] %percent:3s%%, %message%');
         $progressBar->start();
         foreach ($steps as $step) {
             $progressBar->setMessage($step['description'].' ...');
+            $progressBar->advance();
 
-            /** @var Process|Command $command */
+            /** @var Process $command */
             $command = $step['cmd'];
             $command->run();
 
             if (!$command->isSuccessful()) {
                 throw new ProcessFailedException($command);
             }
-            $progressBar->advance();
         }
 
         $progressBar->finish();
