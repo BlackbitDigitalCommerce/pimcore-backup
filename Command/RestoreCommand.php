@@ -37,12 +37,16 @@ class RestoreCommand extends AbstractCommand
                 'cmd' => new Process('cp "'.$input->getArgument('file').'" /tmp/backup.tar.gz')
             ],
             [
-                'description' => 'unzip backup to '.\realpath(dirname(__DIR__,4)),
-                'cmd' => new Process('tar -xzf /tmp/backup.tar.gz -C '.\realpath(dirname(__DIR__,4)))
+                'description' => 'unzip backup to '.PIMCORE_PROJECT_ROOT,
+                'cmd' => new Process('tar -xzf /tmp/backup.tar.gz -C '.PIMCORE_PROJECT_ROOT)
             ],
             [
                 'description' => 'restore database',
-                'cmd' => new Process('mysql -u '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.username').' --password='.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.password').' -h '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.host').' '.\Pimcore::getContainer('pimcore_system_config.database.params.dbname').' < '.\realpath(dirname(__DIR__,4)).'/backup.sql')
+                'cmd' => new Process('mysql -u '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.username').' --password='.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.password').' -h '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.host').' '.\Pimcore::getContainer('pimcore_system_config.database.params.dbname').' < '.PIMCORE_PROJECT_ROOT.'/backup.sql')
+            ],
+            [
+                'description' => 'remove database dump file',
+                'cmd' => 'rm '.PIMCORE_PROJECT_ROOT.'/backup.sql'
             ],
             [
                 'description' => 'clear cache',
