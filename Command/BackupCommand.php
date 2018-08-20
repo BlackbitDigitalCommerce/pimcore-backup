@@ -64,6 +64,7 @@ class BackupCommand extends AbstractCommand
         ];
 
         $progressBar = new ProgressBar($output, \count($steps));
+        $progressBar->setFormat('%current%/%max% [%bar%] %percent:3s%% %elapsed:6s%/%estimated:-6s% %message%\'');
         $progressBar->start();
         foreach ($steps as $step) {
             $progressBar->setMessage($step['description'].' ...');
