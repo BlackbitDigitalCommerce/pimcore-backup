@@ -1,0 +1,20 @@
+{
+  "name": "blackbit/pimcore-backup",
+  "description": "Backup Pimcore",
+  "license": "proprietary",
+  "type": "pimcore-bundle",
+  "autoload": {
+    "psr-4": {
+      "blackbit\\BackupBundle\\": ""
+    }
+  },
+  "require": {
+  },
+  "extra": {
+    "pimcore": {
+      "bundles": [
+        "blackbit\\BackupBundle\\BackupBundle"
+      ]
+    }
+  }
+}
