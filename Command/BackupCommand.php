@@ -43,7 +43,7 @@ class BackupCommand extends AbstractCommand
         $steps = [
             [
                 'description' => 'create an archive of the entire project root, excluding temporary files',
-                'cmd' => new Process('tar --exclude='.PIMCORE_PROJECT_ROOT.'/web/var/tmp --exclude='.PIMCORE_PROJECT_ROOT.'/var/tmp --exclude='.PIMCORE_PROJECT_ROOT.'/var/logs --exclude='.PIMCORE_PROJECT_ROOT.'/var/cache --exclude=var/sessions -cf '.$tmpArchiveFilepath.' '.PIMCORE_PROJECT_ROOT)
+                'cmd' => new Process('tar --exclude='.PIMCORE_PROJECT_ROOT.'/web/var/tmp --exclude='.PIMCORE_PROJECT_ROOT.'/var/tmp --exclude='.PIMCORE_PROJECT_ROOT.'/var/logs --exclude='.PIMCORE_PROJECT_ROOT.'/var/cache --exclude='.PIMCORE_PROJECT_ROOT.'var/sessions -cf '.$tmpArchiveFilepath.' '.PIMCORE_PROJECT_ROOT)
             ],
             [
                 'description' => 'create the mysql dump',
