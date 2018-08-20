@@ -17,7 +17,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
-class BackupCommand extends AbstractCommand
+class RestoreCommand extends AbstractCommand
 {
     protected function configure()
     {
