@@ -23,7 +23,7 @@ class BackupCommand extends AbstractCommand
         $this
             ->setName('app:backup')
             ->setDescription('Backup all data')
-            ->addArgument('path', InputArgument::REQUIRED, 'path to backup file');
+            ->addArgument('path', InputArgument::REQUIRED, 'path to backup tar.gz file');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -31,6 +31,15 @@ class BackupCommand extends AbstractCommand
         $tmpFilename = \uniqid();
         $tmpArchiveFilepath = '/tmp/'.$tmpFilename.'.tar';
         $tmpDatabaseDump = '/tmp/backup.sql';
+
+        $targetFilename = $input->getArgument('path');
+        if(\is_dir($targetFilename) || \substr($targetFilename, -1) === \DIRECTORY_SEPARATOR) {
+            if(\substr($targetFilename, -1) !== \DIRECTORY_SEPARATOR) {
+                $targetFilename .= \DIRECTORY_SEPARATOR;
+            }
+            $targetFilename .= date('YmdHi').'.tar.gz';
+        }
+
         $steps = [
             [
                 'description' => 'create an archive of the entire project root, excluding temporary files',
@@ -50,7 +59,7 @@ class BackupCommand extends AbstractCommand
             ],
             [
                 'description' => 'move backup archive to desired path',
-                'cmd' => new Process('mv '.$tmpArchiveFilepath.' "'.$input->getArgument('path').'"')
+                'cmd' => new Process('mv '.$tmpArchiveFilepath.' "'.$targetFilename.'"')
             ]
         ];
 
