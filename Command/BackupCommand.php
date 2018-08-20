@@ -43,7 +43,7 @@ class BackupCommand extends AbstractCommand
         $steps = [
             [
                 'description' => 'create an archive of the entire project root, excluding temporary files',
-                'cmd' => new Process('tar --exclude='.PIMCORE_PROJECT_ROOT.'/web/var/tmp --exclude='.PIMCORE_PROJECT_ROOT.'/var/tmp --exclude='.PIMCORE_PROJECT_ROOT.'/var/logs --exclude='.PIMCORE_PROJECT_ROOT.'/var/cache --exclude='.PIMCORE_PROJECT_ROOT.'/var/sessions -cf '.$tmpArchiveFilepath.' '.PIMCORE_PROJECT_ROOT)
+                'cmd' => new Process('tar --exclude=web/var/tmp --exclude=var/tmp --exclude=var/logs --exclude=var/cache --exclude=var/sessions -cf '.$tmpArchiveFilepath.' -C '.PIMCORE_PROJECT_ROOT.' .')
             ],
             [
                 'description' => 'create the mysql dump',
@@ -51,19 +51,25 @@ class BackupCommand extends AbstractCommand
             ],
             [
                 'description' => 'put the dump into the tar archive',
-                'cmd' => new Process('tar -rf '.$tmpArchiveFilepath.' '.$tmpDatabaseDump)
+                'cmd' => new Process('tar -rf '.$tmpArchiveFilepath.' -C '.dirname($tmpDatabaseDump).' backup.sql')
             ],
             [
                 'description' => 'zip the archive',
                 'cmd' => new Process('gzip -c '.$tmpArchiveFilepath.' > "'.$targetFilename.'"')
+            ],
+            [
+                'description' => 'Remove temporary files',
+                'cmd' => new Process('rm '.$tmpArchiveFilepath.' '.$tmpDatabaseDump)
             ]
         ];
 
         $progressBar = new ProgressBar($output, \count($steps));
-        $progressBar->setFormat('%current%/%max% [%bar%] %percent:3s%% %elapsed:6s%/%estimated:-6s% %message%\'');
+        $progressBar->setMessage('Starting ...');
+        $progressBar->setFormat('%current%/%max% [%bar%] %percent:3s%%, %message%');
         $progressBar->start();
         foreach ($steps as $step) {
             $progressBar->setMessage($step['description'].' ...');
+            $progressBar->advance();
 
             /** @var Process $command */
             $command = $step['cmd'];
@@ -72,7 +78,6 @@ class BackupCommand extends AbstractCommand
             if (!$command->isSuccessful()) {
                 throw new ProcessFailedException($command);
             }
-            $progressBar->advance();
         }
 
         $progressBar->finish();
