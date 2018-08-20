@@ -55,11 +55,7 @@ class BackupCommand extends AbstractCommand
             ],
             [
                 'description' => 'zip the archive',
-                'cmd' => new Process('gzip '.$tmpArchiveFilepath)
-            ],
-            [
-                'description' => 'move backup archive to desired path',
-                'cmd' => new Process('mv '.$tmpArchiveFilepath.' "'.$targetFilename.'"')
+                'cmd' => new Process('gzip -c '.$tmpArchiveFilepath.' > "'.$targetFilename.'"')
             ]
         ];
 
