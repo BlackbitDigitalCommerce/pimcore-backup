@@ -8,6 +8,7 @@
 namespace blackbit\BackupBundle\Command;
 
 use AppBundle\Model\Object\Person;
+use blackbit\BackupBundle\Tools\ParallelProcessComposite;
 use Pimcore\Console\AbstractCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
@@ -31,12 +32,11 @@ class RestoreCommand extends AbstractCommand
     {
         $steps = [
             [
-                'description' => 'unzip backup to '.PIMCORE_PROJECT_ROOT,
-                'cmd' => new Process('tar -xzf "'.$input->getArgument('file').'" -C '.PIMCORE_PROJECT_ROOT)
-            ],
-            [
-                'description' => 'restore database',
-                'cmd' => new Process('mysql -u '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.username').' --password='.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.password').' -h '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.host').' '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.dbname').' < '.PIMCORE_PROJECT_ROOT.'/backup.sql')
+                'description' => 'unzip backup to '.PIMCORE_PROJECT_ROOT.' / restore database (in parallel)',
+                'cmd' => new ParallelProcessComposite(
+                    new Process('tar -xzf "'.$input->getArgument('file').'" -C '.PIMCORE_PROJECT_ROOT),
+                    new Process('mysql -u '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.username').' --password='.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.password').' -h '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.host').' '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.dbname').' < '.PIMCORE_PROJECT_ROOT.'/backup.sql')
+                )
             ],
             [
                 'description' => 'remove database dump file',

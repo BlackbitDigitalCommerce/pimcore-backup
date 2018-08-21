@@ -2,6 +2,7 @@
 
 namespace blackbit\BackupBundle\Tools;
 
+use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Exception\RuntimeException;
 use Symfony\Component\Process\Process;
 
@@ -9,6 +10,8 @@ class ParallelProcessComposite extends Process
 {
     /** @var Process[] */
     private $processes;
+
+    private $exitCode = 0;
 
     public function __construct(Process ...$processes) {
         $this->processes = $processes;
@@ -20,10 +23,22 @@ class ParallelProcessComposite extends Process
             $process->start();
         }
 
-        foreach($this->processes as $index => $process) {
-            if(!$process->isRunning() && $process->getExitCode() !== 0) {
-                throw new RuntimeException($process->getErrorOutput(), $process->getExitCode());
+        do {
+            $minOneIsRunning = false;
+            foreach($this->processes as $index => $process) {
+                if(!$process->isRunning() && $process->getExitCode() > 0) {
+                    $this->exitCode = $process->getExitCode();
+                }
+
+                if(!$minOneIsRunning && $process->isRunning()) {
+                    $minOneIsRunning = true;
+                }
             }
-        }
+        } while($minOneIsRunning);
+    }
+
+    public function getExitCode()
+    {
+        return $this->exitCode;
     }
 }
