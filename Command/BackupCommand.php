@@ -8,6 +8,7 @@
 namespace blackbit\BackupBundle\Command;
 
 use AppBundle\Model\Object\Person;
+use blackbit\BackupBundle\Tools\ParallelProcessComposite;
 use Pimcore\Console\AbstractCommand;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
@@ -42,12 +43,11 @@ class BackupCommand extends AbstractCommand
 
         $steps = [
             [
-                'description' => 'create an archive of the entire project root, excluding temporary files',
-                'cmd' => new Process('tar --exclude=web/var/tmp --exclude=var/tmp --exclude=var/logs --exclude=var/cache --exclude=var/sessions -cf '.$tmpArchiveFilepath.' -C '.PIMCORE_PROJECT_ROOT.' .')
-            ],
-            [
-                'description' => 'create the mysql dump',
-                'cmd' => new Process('mysqldump -u '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.username').' --password='.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.password').' -h '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.host').' '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.dbname').' -r '.$tmpDatabaseDump)
+                'description' => 'create an archive of the entire project root, excluding temporary files / dump database (parallel jobs)',
+                'cmd' => new ParallelProcessComposite(
+                    new Process('tar --exclude=web/var/tmp --exclude=var/tmp --exclude=var/logs --exclude=var/cache --exclude=var/sessions -cf '.$tmpArchiveFilepath.' -C '.PIMCORE_PROJECT_ROOT.' .'),
+                    new Process('mysqldump -u '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.username').' --password='.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.password').' -h '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.host').' '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.dbname').' -r '.$tmpDatabaseDump)
+                )
             ],
             [
                 'description' => 'put the dump into the tar archive',

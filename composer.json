@@ -8,7 +8,8 @@
       "blackbit\\BackupBundle\\": ""
     }
   },
-  "require": {
+  "require-dev": {
+    "symfony/process":"3.*"
   },
   "extra": {
     "pimcore": {
