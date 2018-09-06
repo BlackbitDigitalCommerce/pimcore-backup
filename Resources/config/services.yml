@@ -14,7 +14,7 @@ services:
         arguments: ['@blackbit.backup.adapter']
 
     blackbit\BackupBundle\Command\RestoreCommand:
-        class: blackbit\BackupBundle\Command\BackupCommand
+        class: blackbit\BackupBundle\Command\RestoreCommand
         arguments: ['@blackbit.backup.adapter']
 
     blackbit.backup.adapter:

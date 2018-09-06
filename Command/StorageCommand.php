@@ -4,7 +4,6 @@ namespace blackbit\BackupBundle\Command;
 
 use League\Flysystem\AdapterInterface;
 use League\Flysystem\Filesystem;
-use League\Flysystem\FilesystemInterface;
 use Pimcore\Console\AbstractCommand;
 
 class StorageCommand extends AbstractCommand
