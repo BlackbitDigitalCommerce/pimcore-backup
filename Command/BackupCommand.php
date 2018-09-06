@@ -22,7 +22,7 @@ class BackupCommand extends StorageCommand
     protected function configure()
     {
         $this
-            ->setName('app:backup')
+            ->setName('backup:backup')
             ->setDescription('Backup all data')
             ->addArgument('filename', InputArgument::OPTIONAL, 'file name');
     }

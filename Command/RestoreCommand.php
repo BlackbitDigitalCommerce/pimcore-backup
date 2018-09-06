@@ -24,7 +24,7 @@ class RestoreCommand extends StorageCommand
     protected function configure()
     {
         $this
-            ->setName('app:restore')
+            ->setName('backup:restore')
             ->setDescription('Restore backup')
             ->addArgument('filename', InputArgument::REQUIRED, 'path to backup archive file created by app:backup');
     }
