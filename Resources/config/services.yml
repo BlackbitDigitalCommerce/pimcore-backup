@@ -11,12 +11,15 @@ services:
 
     blackbit\BackupBundle\Command\BackupCommand:
         class: blackbit\BackupBundle\Command\BackupCommand
-        arguments: ['@blackbit.backup.adapter']
+        arguments:
+            $filesystemAdapter: '@blackbit.backup.adapter'
 
     blackbit\BackupBundle\Command\RestoreCommand:
         class: blackbit\BackupBundle\Command\RestoreCommand
-        arguments: ['@blackbit.backup.adapter']
+        arguments:
+            $filesystemAdapter: '@blackbit.backup.adapter'
 
     blackbit.backup.adapter:
         class: League\Flysystem\Adapter\Local
-        arguments: ['/tmp']
+        arguments:
+            $root: '/tmp'
