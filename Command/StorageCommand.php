@@ -13,8 +13,7 @@ class StorageCommand extends AbstractCommand
 
     public function __construct(AdapterInterface $filesystemAdapter)
     {
-        $this->filesystem = new Filesystem($filesystemAdapter);
-
         parent::__construct();
+        $this->filesystem = new Filesystem($filesystemAdapter);
     }
 }
