@@ -8,8 +8,15 @@
       "blackbit\\BackupBundle\\": ""
     }
   },
+  "require": {
+    "php": ">=7",
+    "league/flysystem":"1.*",
+    "league/flysystem-ziparchive": "^1.0",
+    "league/flysystem-aws-s3-v3": "^1.0"
+  },
   "require-dev": {
-    "symfony/process":"3.*"
+    "symfony/process":"3.*",
+    "symfony/console":"*"
   },
   "extra": {
     "pimcore": {

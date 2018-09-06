@@ -7,38 +7,35 @@
  */
 namespace blackbit\BackupBundle\Command;
 
-use AppBundle\Model\Object\Person;
 use blackbit\BackupBundle\Tools\ParallelProcessComposite;
-use Pimcore\Console\AbstractCommand;
+use League\Flysystem\Filesystem;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
+use Pimcore\Tool\Console;
 
-class BackupCommand extends AbstractCommand
+class BackupCommand extends StorageCommand
 {
     protected function configure()
     {
         $this
             ->setName('app:backup')
             ->setDescription('Backup all data')
-            ->addArgument('path', InputArgument::REQUIRED, 'path to backup tar.gz file');
+            ->addArgument('filename', InputArgument::OPTIONAL, 'file name');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $tmpFilename = \uniqid();
-        $tmpArchiveFilepath = '/tmp/'.$tmpFilename.'.tar';
-        $tmpDatabaseDump = '/tmp/backup.sql';
+        $tmpFilename = \uniqid('', true);
+        $tmpArchiveFilepath = PIMCORE_SYSTEM_TEMP_DIRECTORY.'/'.$tmpFilename.'.tar';
+        $tmpDatabaseDump = PIMCORE_SYSTEM_TEMP_DIRECTORY.'/'.$tmpFilename.'.sql';
 
-        $targetFilename = $input->getArgument('path');
-        if(\is_dir($targetFilename) || \substr($targetFilename, -1) === \DIRECTORY_SEPARATOR) {
-            if(\substr($targetFilename, -1) !== \DIRECTORY_SEPARATOR) {
-                $targetFilename .= \DIRECTORY_SEPARATOR;
-            }
-            $targetFilename .= date('YmdHi').'.tar.gz';
+        $targetFilename = $input->getArgument('filename');
+        if(empty($targetFilename)) {
+            $targetFilename = 'backup_pimcore-'.date('YmdHi').'.tar.gz';
         }
 
         $steps = [
@@ -55,11 +52,35 @@ class BackupCommand extends AbstractCommand
             ],
             [
                 'description' => 'zip the archive',
-                'cmd' => new Process('gzip -c '.$tmpArchiveFilepath.' > "'.$targetFilename.'"')
+                'cmd' => new Process('gzip '.$tmpArchiveFilepath)
+            ],
+            [
+                'description' => 'save backup to '.$targetFilename,
+                'cmd' => new class($this->filesystem, $targetFilename, $tmpArchiveFilepath) {
+                    /** @var Filesystem */
+                    private $fileSystem;
+
+                    private $targetFilename;
+
+                    private $archiveFilePath;
+
+                    public function __construct(Filesystem $fileSystem, $targetFilename, $tmpArchiveFilepath)
+                    {
+                        $this->fileSystem = $fileSystem;
+                        $this->archiveFilePath = $tmpArchiveFilepath;
+                        $this->targetFilename = $targetFilename;
+                    }
+
+                    public function run($callback = null/*, array $env = array()*/)
+                    {
+                        $stream = fopen($this->archiveFilePath, 'rb');
+                        $this->fileSystem->writeStream($this->targetFilename, $stream);
+                    }
+                }
             ],
             [
                 'description' => 'Remove temporary files',
-                'cmd' => new Process('rm '.$tmpArchiveFilepath.' '.$tmpDatabaseDump)
+                'cmd' => new Process('rm '.$tmpDatabaseDump.' '.$this->archiveFilePath)
             ]
         ];
 
