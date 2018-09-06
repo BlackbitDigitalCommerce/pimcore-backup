@@ -1,6 +1,6 @@
 <?php
 
-namespace blackbit\EasyCatalogExportBundle\DependencyInjection;
+namespace blackbit\BackupBundle\DependencyInjection;
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
