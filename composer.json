@@ -12,7 +12,9 @@
     "php": ">=7",
     "league/flysystem":"1.*",
     "league/flysystem-ziparchive": "^1.0",
-    "league/flysystem-aws-s3-v3": "^1.0"
+    "league/flysystem-aws-s3-v3": "^1.0",
+    "spatie/flysystem-dropbox": "^1.0",
+    "league/flysystem-azure-blob-storage": "^0.1.4"
   },
   "require-dev": {
     "symfony/process":"3.*",

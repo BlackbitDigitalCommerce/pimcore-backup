@@ -8,3 +8,11 @@ services:
         # this means you cannot fetch services directly from the container via $container->get()
         # if you need to do this, you can override this setting on individual services
         public: false
+
+    blackbit\BackupBundle\Command\BackupCommand:
+        class: blackbit\BackupBundle\Command\BackupCommand
+        arguments: ['@blackbit.backup.adapter']
+
+    blackbit.backup.adapter:
+        class: League\Flysystem\Adapter\Local
+        arguments: ['/tmp']
