@@ -8,7 +8,7 @@
 namespace blackbit\BackupBundle\Command;
 
 use AppBundle\Model\Object\Person;
-use blackbit\BackupBundle\Tools\ParallelProcessComposite;
+use blackbit\BackupBundle\Tools\ParallelProcess;
 use League\Flysystem\Filesystem;
 use Pimcore\Console\AbstractCommand;
 use Symfony\Component\Console\Command\Command;
@@ -42,10 +42,9 @@ class RestoreCommand extends StorageCommand
                 'cmd' => new class($this->filesystem, $fileName, $tmpArchiveFilepath) {
                     /** @var Filesystem */
                     private $fileSystem;
-
                     private $sourceFilename;
-
                     private $archiveFilePath;
+                    private $successful = false;
 
                     public function __construct(Filesystem $fileSystem, $sourceFilename, $tmpArchiveFilepath)
                     {
@@ -57,13 +56,18 @@ class RestoreCommand extends StorageCommand
                     public function run()
                     {
                         $stream = $this->fileSystem->readStream($this->sourceFilename);
-                        $this->fileSystem->putStream($this->archiveFilePath, $stream);
+                        $this->successful = $this->fileSystem->putStream($this->archiveFilePath, $stream);
+                    }
+
+                    public function isSuccessful(): bool
+                    {
+                        return $this->successful;
                     }
                 }
             ],
             [
                 'description' => 'unzip backup to '.PIMCORE_PROJECT_ROOT.' / restore database (in parallel)',
-                'cmd' => new ParallelProcessComposite(
+                'cmd' => new ParallelProcess(
                     new Process('tar -xzf "'.$tmpArchiveFilepath.'" -C '.PIMCORE_PROJECT_ROOT),
                     new Process('mysql -u '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.username').' --password='.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.password').' -h '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.host').' '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.dbname').' < '.PIMCORE_PROJECT_ROOT.'/backup.sql')
                 )
@@ -95,7 +99,7 @@ class RestoreCommand extends StorageCommand
             $command->run();
 
             if (!$command->isSuccessful()) {
-                throw new ProcessFailedException($command);
+                throw new ProcessFailedException($step['cmd']);
             }
         }
 

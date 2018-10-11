@@ -30,7 +30,7 @@ class Installer extends AbstractInstaller {
 	 * @return boolean
 	 */
 	public function isInstalled() {
-        return \is_writable('/tmp');
+        return \is_writable(PIMCORE_SYSTEM_TEMP_DIRECTORY);
 	}
 
 	public function needsReloadAfterInstall(){

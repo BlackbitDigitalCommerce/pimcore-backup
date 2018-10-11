@@ -7,7 +7,7 @@
  */
 namespace blackbit\BackupBundle\Command;
 
-use blackbit\BackupBundle\Tools\ParallelProcessComposite;
+use blackbit\BackupBundle\Tools\ParallelProcess;
 use League\Flysystem\Filesystem;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
@@ -41,14 +41,14 @@ class BackupCommand extends StorageCommand
         $steps = [
             [
                 'description' => 'create an archive of the entire project root, excluding temporary files / dump database (parallel jobs)',
-                'cmd' => new ParallelProcessComposite(
+                'cmd' => new ParallelProcess(
                     new Process('tar --exclude=web/var/tmp --exclude=var/tmp --exclude=var/logs --exclude=var/cache --exclude=var/sessions -cf '.$tmpArchiveFilepath.' -C '.PIMCORE_PROJECT_ROOT.' .'),
                     new Process('mysqldump -u '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.username').' --password='.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.password').' -h '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.host').' '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.dbname').' -r '.$tmpDatabaseDump)
                 )
             ],
             [
                 'description' => 'put the dump into the tar archive',
-                'cmd' => new Process('tar -rf '.$tmpArchiveFilepath.' -C '.dirname($tmpDatabaseDump).' backup.sql')
+                'cmd' => new Process('tar -rf '.$tmpArchiveFilepath.' -C '.dirname($tmpDatabaseDump).' '.$tmpFilename.'.sql --transform s/'.$tmpFilename.'.sql/backup.sql/')
             ],
             [
                 'description' => 'zip the archive',
@@ -56,13 +56,15 @@ class BackupCommand extends StorageCommand
             ],
             [
                 'description' => 'save backup to '.$targetFilename,
-                'cmd' => new class($this->filesystem, $targetFilename, $tmpArchiveFilepath) {
+                'cmd' => new class($this->filesystem, $targetFilename, $tmpArchiveFilepath.'.gz') {
                     /** @var Filesystem */
                     private $fileSystem;
 
                     private $targetFilename;
 
                     private $archiveFilePath;
+
+                    private $successful = false;
 
                     public function __construct(Filesystem $fileSystem, $targetFilename, $tmpArchiveFilepath)
                     {
@@ -74,13 +76,17 @@ class BackupCommand extends StorageCommand
                     public function run($callback = null/*, array $env = array()*/)
                     {
                         $stream = fopen($this->archiveFilePath, 'rb');
-                        $this->fileSystem->writeStream($this->targetFilename, $stream);
+                        $this->successful = $this->fileSystem->writeStream($this->targetFilename, $stream);
+                    }
+
+                    public function isSuccessful() {
+                        return $this->successful;
                     }
                 }
             ],
             [
                 'description' => 'Remove temporary files',
-                'cmd' => new Process('rm '.$tmpDatabaseDump.' '.$this->archiveFilePath)
+                'cmd' => new Process('rm '.$tmpDatabaseDump.' '.$tmpArchiveFilepath.'.gz')
             ]
         ];
 
@@ -92,12 +98,12 @@ class BackupCommand extends StorageCommand
             $progressBar->setMessage($step['description'].' ...');
             $progressBar->advance();
 
-            /** @var Process $command */
+            /** @var Process|ParallelProcess $command */
             $command = $step['cmd'];
             $command->run();
 
             if (!$command->isSuccessful()) {
-                throw new ProcessFailedException($command);
+                throw new ProcessFailedException($step['cmd']);
             }
         }
 
