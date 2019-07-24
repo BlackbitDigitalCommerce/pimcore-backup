@@ -10,6 +10,7 @@ class ParallelProcess
     private $processes;
 
     private $exitCode = 0;
+    private $error;
 
     public function __construct(Process ...$processes) {
         $this->processes = $processes;
@@ -26,6 +27,7 @@ class ParallelProcess
             foreach($this->processes as $index => $process) {
                 if(!$process->isRunning() && $process->getExitCode() > 0) {
                     $this->exitCode = $process->getExitCode();
+                    throw new \Exception($process->getErrorOutput());
                 }
 
                 if(!$minOneIsRunning && $process->isRunning()) {

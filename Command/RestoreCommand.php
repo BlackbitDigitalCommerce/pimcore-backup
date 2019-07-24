@@ -1,10 +1,4 @@
 <?php
-/**
- *
- *
- * @author    Patrick Bitzer <patrick.bitzer@blackbit.de>
- * @copyright Blackbit digital Commerce GmbH, https://www.blackbit.de/
- */
 namespace blackbit\BackupBundle\Command;
 
 use AppBundle\Model\Object\Person;
@@ -56,7 +50,7 @@ class RestoreCommand extends StorageCommand
                     public function run()
                     {
                         $stream = $this->fileSystem->readStream($this->sourceFilename);
-                        $this->successful = $this->fileSystem->putStream($this->archiveFilePath, $stream);
+                        $this->successful = (bool) \file_put_contents($this->archiveFilePath, $stream);
                     }
 
                     public function isSuccessful(): bool
@@ -66,23 +60,20 @@ class RestoreCommand extends StorageCommand
                 }
             ],
             [
-                'description' => 'unzip backup to '.PIMCORE_PROJECT_ROOT.' / restore database (in parallel)',
+                'description' => 'unzip backup to '.PIMCORE_PROJECT_ROOT,
+                'cmd' => Process::fromShellCommandline('tar -xzf "'.$tmpArchiveFilepath.'" -C '.PIMCORE_PROJECT_ROOT)
+            ],
+            [
+                'description' => 'restore database',
+                'cmd' => Process::fromShellCommandline('mysql -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase().' < '.PIMCORE_PROJECT_ROOT.'/backup.sql')
+            ],
+            [
+                'description' => 'remove temporary files / clear cache',
                 'cmd' => new ParallelProcess(
-                    new Process('tar -xzf "'.$tmpArchiveFilepath.'" -C '.PIMCORE_PROJECT_ROOT),
-                    new Process('mysql -u '.\Pimcore::getContainer()->getParameter('doctrine.dbal.connections.default.user').' --password='.\Pimcore::getContainer()->getParameter('doctrine.dbal.connections.default.password').' -h '.\Pimcore::getContainer()->getParameter('doctrine.dbal.connections.default.host').' '.\Pimcore::getContainer()->getParameter('doctrine.dbal.connections.default.dbname').' < '.PIMCORE_PROJECT_ROOT.'/backup.sql')
+                    Process::fromShellCommandline('rm '.PIMCORE_PROJECT_ROOT.'/backup.sql '.$tmpArchiveFilepath),
+                    Process::fromShellCommandline(PIMCORE_PROJECT_ROOT.'/bin/console cache:clear'),
+                    Process::fromShellCommandline(PIMCORE_PROJECT_ROOT.'/bin/console pimcore:cache:clear')
                 )
-            ],
-            [
-                'description' => 'remove database dump file',
-                'cmd' => new Process('rm '.PIMCORE_PROJECT_ROOT.'/backup.sql')
-            ],
-            [
-                'description' => 'clear cache',
-                'cmd' => new Process(PIMCORE_PROJECT_ROOT.'/bin/console cache:clear')
-            ],
-            [
-                'description' => 'remove temporary file',
-                'cmd' => new Process('rm '.$tmpArchiveFilepath)
             ]
         ];
 
@@ -104,6 +95,8 @@ class RestoreCommand extends StorageCommand
         }
 
         $progressBar->finish();
+
+        $output->writeln('Backup successfully restored');
     }
 }
 

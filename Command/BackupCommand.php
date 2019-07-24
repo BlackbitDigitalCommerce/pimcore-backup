@@ -1,14 +1,7 @@
 <?php
-/**
- *
- *
- * @author    Patrick Bitzer <patrick.bitzer@blackbit.de>
- * @copyright Blackbit digital Commerce GmbH, https://www.blackbit.de/
- */
 namespace blackbit\BackupBundle\Command;
 
 use blackbit\BackupBundle\Tools\ParallelProcess;
-use Graze\ParallelProcess\Pool;
 use League\Flysystem\Filesystem;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
@@ -16,7 +9,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
-use Pimcore\Tool\Console;
 
 class BackupCommand extends StorageCommand
 {
@@ -41,19 +33,19 @@ class BackupCommand extends StorageCommand
 
         $steps = [
             [
-                'description' => 'create an archive of the entire project root, excluding temporary files / dump database (parallel jobs)',
+                'description' => 'dump database / create an archive of the entire project root, excluding temporary files (parallel jobs)',
                 'cmd' => new ParallelProcess(
-                    new Process('tar --exclude=web/var/tmp --exclude=web/var/tmp --exclude=var/tmp --exclude=var/logs --exclude=var/cache --exclude=var/sessions -cf '.$tmpArchiveFilepath.' -C '.PIMCORE_PROJECT_ROOT.' .'),
-                    new Process('mysqldump -u '.\Pimcore::getContainer()->getParameter('doctrine.dbal.connections.default.user').' --password='.\Pimcore::getContainer()->getParameter('doctrine.dbal.connections.default.password').' -h '.\Pimcore::getContainer()->getParameter('doctrine.dbal.connections.default.host').' '.\Pimcore::getContainer()->getParameter('doctrine.dbal.connections.default.dbname').' -r '.$tmpDatabaseDump)
+                    Process::fromShellCommandline('tar --exclude=web/var/tmp --exclude=web/var/tmp --exclude=var/tmp --exclude=var/logs --exclude=var/cache --exclude=var/sessions -cf '.$tmpArchiveFilepath.' -C '.PIMCORE_PROJECT_ROOT.' .'),
+                    Process::fromShellCommandline('mysqldump -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase().' -r '.$tmpDatabaseDump)
                 )
             ],
             [
                 'description' => 'put the dump into the tar archive',
-                'cmd' => new Process('tar -rf '.$tmpArchiveFilepath.' -C '.dirname($tmpDatabaseDump).' '.$tmpFilename.'.sql --transform s/'.$tmpFilename.'.sql/backup.sql/')
+                'cmd' => Process::fromShellCommandline('tar -rf '.$tmpArchiveFilepath.' -C '.dirname($tmpDatabaseDump).' '.$tmpFilename.'.sql --transform s/'.$tmpFilename.'.sql/backup.sql/')
             ],
             [
                 'description' => 'zip the archive',
-                'cmd' => new Process('gzip '.$tmpArchiveFilepath)
+                'cmd' => Process::fromShellCommandline('gzip '.$tmpArchiveFilepath)
             ],
             [
                 'description' => 'save backup to '.$targetFilename,
@@ -77,7 +69,7 @@ class BackupCommand extends StorageCommand
                     public function run($callback = null/*, array $env = array()*/)
                     {
                         $stream = fopen($this->archiveFilePath, 'rb');
-                        $this->successful = $this->fileSystem->writeStream($this->targetFilename, $stream);
+                        $this->successful = $this->fileSystem->putStream($this->targetFilename, $stream);
                     }
 
                     public function isSuccessful() {
@@ -87,7 +79,7 @@ class BackupCommand extends StorageCommand
             ],
             [
                 'description' => 'Remove temporary files',
-                'cmd' => new Process('rm '.$tmpDatabaseDump.' '.$tmpArchiveFilepath.'.gz')
+                'cmd' => Process::fromShellCommandline('rm '.$tmpDatabaseDump.' '.$tmpArchiveFilepath.'.gz')
             ]
         ];
 
