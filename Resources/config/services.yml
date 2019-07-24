@@ -23,6 +23,7 @@ services:
         class: League\Flysystem\Adapter\Local
         arguments:
             $root: '/tmp'
+        alias: League\Flysystem\AdapterInterface
 
     blackbit\BackupBundle\Command\:
       resource: '../../Command'
