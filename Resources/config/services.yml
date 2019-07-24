@@ -23,3 +23,7 @@ services:
         class: League\Flysystem\Adapter\Local
         arguments:
             $root: '/tmp'
+
+    blackbit\BackupBundle\Command\:
+      resource: '../../Command'
+      tags: ['console.command']

@@ -14,11 +14,11 @@
     "league/flysystem-ziparchive": "^1.0",
     "league/flysystem-aws-s3-v3": "^1.0",
     "spatie/flysystem-dropbox": "^1.0",
-    "league/flysystem-azure-blob-storage": "^0.1.4"
+    "league/flysystem-azure-blob-storage": "^0.1.4",
+    "graze/parallel-process": "*"
   },
   "require-dev": {
-    "symfony/process":"3.*",
-    "symfony/console":"*"
+    "pimcore/pimcore":"5.*|6.*"
   },
   "extra": {
     "pimcore": {
