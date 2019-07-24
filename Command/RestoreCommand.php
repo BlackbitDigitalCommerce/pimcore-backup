@@ -5,6 +5,7 @@ use AppBundle\Model\Object\Person;
 use blackbit\BackupBundle\Tools\ParallelProcess;
 use League\Flysystem\Filesystem;
 use Pimcore\Console\AbstractCommand;
+use Pimcore\Tool\Console;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
@@ -71,8 +72,8 @@ class RestoreCommand extends StorageCommand
                 'description' => 'remove temporary files / clear cache',
                 'cmd' => new ParallelProcess(
                     Process::fromShellCommandline('rm '.PIMCORE_PROJECT_ROOT.'/backup.sql '.$tmpArchiveFilepath),
-                    Process::fromShellCommandline(PIMCORE_PROJECT_ROOT.'/bin/console cache:clear'),
-                    Process::fromShellCommandline(PIMCORE_PROJECT_ROOT.'/bin/console pimcore:cache:clear')
+                    Process::fromShellCommandline(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console cache:clear'),
+                    Process::fromShellCommandline(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console pimcore:cache:clear')
                 )
             ]
         ];
