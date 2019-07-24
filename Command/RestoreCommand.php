@@ -69,7 +69,7 @@ class RestoreCommand extends StorageCommand
                 'description' => 'unzip backup to '.PIMCORE_PROJECT_ROOT.' / restore database (in parallel)',
                 'cmd' => new ParallelProcess(
                     new Process('tar -xzf "'.$tmpArchiveFilepath.'" -C '.PIMCORE_PROJECT_ROOT),
-                    new Process('mysql -u '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.username').' --password='.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.password').' -h '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.host').' '.\Pimcore::getContainer()->getParameter('pimcore_system_config.database.params.dbname').' < '.PIMCORE_PROJECT_ROOT.'/backup.sql')
+                    new Process('mysql -u '.\Pimcore::getContainer()->getParameter('doctrine.dbal.connections.default.user').' --password='.\Pimcore::getContainer()->getParameter('doctrine.dbal.connections.default.password').' -h '.\Pimcore::getContainer()->getParameter('doctrine.dbal.connections.default.host').' '.\Pimcore::getContainer()->getParameter('doctrine.dbal.connections.default.dbname').' < '.PIMCORE_PROJECT_ROOT.'/backup.sql')
                 )
             ],
             [
