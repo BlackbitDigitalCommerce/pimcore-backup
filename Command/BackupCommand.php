@@ -36,7 +36,7 @@ class BackupCommand extends StorageCommand
                 'description' => 'dump database / create an archive of the entire project root, excluding temporary files (parallel jobs)',
                 'cmd' => new ParallelProcess(
                     Process::fromShellCommandline('tar --exclude=web/var/tmp --exclude=web/var/tmp --exclude=var/tmp --exclude=var/logs --exclude=var/cache --exclude=var/sessions -cf '.$tmpArchiveFilepath.' -C '.PIMCORE_PROJECT_ROOT.' .'),
-                    Process::fromShellCommandline('mysqldump -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase().' -r '.$tmpDatabaseDump)
+                    Process::fromShellCommandline('mysqldump --routines -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase().' -r '.$tmpDatabaseDump)
                 )
             ],
             [
