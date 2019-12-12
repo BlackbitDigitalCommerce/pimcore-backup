@@ -1,7 +1,7 @@
 {
   "name": "blackbit/pimcore-backup",
-  "description": "Backup Pimcore",
-  "license": "proprietary",
+  "description": "Backup and restore Pimcore",
+  "license": "GPLv3",
   "type": "pimcore-bundle",
   "autoload": {
     "psr-4": {
