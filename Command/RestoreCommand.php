@@ -98,6 +98,8 @@ class RestoreCommand extends StorageCommand
         $progressBar->finish();
 
         $output->writeln('Backup successfully restored');
+
+        return 0;
     }
 }
 

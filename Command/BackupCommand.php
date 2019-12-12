@@ -103,6 +103,7 @@ class BackupCommand extends StorageCommand
         $progressBar->finish();
 
         $output->writeln('Backup successfully created');
+        return 0;
     }
 }
 
