@@ -39,7 +39,7 @@ services:
 Please also see [the documentation for other configuration options](https://flysystem.thephpleague.com/docs/adapter/aws-s3/).
 
 ### Backup execution
-Backups should be saved regularly. When you call `bin/console backup:backup` without parameter the backup archive gets named `backup_pimcore-YYYYMMDDhhmm.tar.gz` (YYYYMMDDhhmm gets replaced by current date and time). Alternatively you can set the name yourself by providing an argument like `bin/console backup:backup backup.tar.gz`. This plugin does not care about deleting old backups, so keep an eye on available disk space.
+Backups should be saved regularly. When you call `bin/console backup:backup` without parameter the backup archive file gets named `backup_pimcore-YYYYMMDDhhmm.tar.gz` (YYYYMMDDhhmm gets replaced by current date and time). Alternatively you can set the name yourself by providing an argument like `bin/console backup:backup backup.tar.gz`. This plugin does not care about deleting old backups, so keep an eye on available disk space.
 
 ### Restore
 Backups can be restored by executing `bin/console backup:restore <filename>`. It uses the same storage configuration as described above.
