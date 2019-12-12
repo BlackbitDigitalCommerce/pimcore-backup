@@ -1,6 +1,7 @@
 # Pimcore Backup
 
 This plugin adds 2 commands to bin/console:
+
 * `backup:backup` backups all necessary files and a database dump to a file
 * `backup:restore` restores Pimcore status based on a previously saved backup
 
