@@ -96,7 +96,11 @@ class BackupCommand extends StorageCommand
             $command->run();
 
             if (!$command->isSuccessful()) {
-                throw new ProcessFailedException($step['cmd']);
+                if($step['cmd'] instanceof Process) {
+                    throw new ProcessFailedException($step['cmd']);
+                }
+
+                throw new \Exception($step['description'].' failed');
             }
         }
 

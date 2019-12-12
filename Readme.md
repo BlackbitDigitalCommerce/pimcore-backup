@@ -23,16 +23,20 @@ services:
     blackbit.backup.s3Client:
         class: Aws\S3\S3Client
         arguments:
-            credentials:
-                key: your-key
-                secret: your-secret
-            region: your-region
-            version: latest
+            - {
+                credentials:
+                    key: your-key
+                    secret: your-secret
+                region: your-region
+                version: latest
+            }
       
     blackbit.backup.adapter:
         class: League\Flysystem\AwsS3v3\AwsS3Adapter
         arguments: ['@blackbit.backup.s3Client', 'your-bucket-name', 'optional/path/prefix']
 ```
+
+Please also see [the documentation for other configuration options](https://flysystem.thephpleague.com/docs/adapter/aws-s3/).
 
 ### Backup execution
 Backups should be saved regularly. When you call `bin/console backup:backup` without parameter the backup archive gets named `backup_pimcore-YYYYMMDDhhmm.tar.gz` (YYYYMMDDhhmm gets replaced by current date and time). Alternatively you can set the name yourself by providing an argument like `bin/console backup:backup backup.tar.gz`. This plugin does not care about deleting old backups, so keep an eye on available disk space.
