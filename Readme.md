@@ -10,6 +10,7 @@ It is important to backup files and database at nearly the same point in time be
 
 ### Storage configuration
 Multiple storage providers are supported (local storage, FTP, S3, Azure, Dropbox etc.). To configure the location of backups you have to add a service definition to your `app/config/services.yml`
+
 Example for local storage (path should be adjusted):
 ```yaml
 services:
