@@ -36,6 +36,7 @@ class RestoreCommand extends StorageCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        set_time_limit(0);
         $tmpFileName = \uniqid('', true);
         $tmpArchiveFilepath = PIMCORE_SYSTEM_TEMP_DIRECTORY.'/'.$tmpFileName.'.tar.gz';
 
@@ -72,18 +73,21 @@ class RestoreCommand extends StorageCommand
             ],
             [
                 'description' => 'unzip backup to '.PIMCORE_PROJECT_ROOT,
-                'cmd' => Process::fromShellCommandline('tar -xzf "'.$tmpArchiveFilepath.'" -C '.PIMCORE_PROJECT_ROOT)
+                'cmd' =>
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('tar -xzf "'.$tmpArchiveFilepath.'" -C '.PIMCORE_PROJECT_ROOT, null, null, null, null) : new Process('tar -xzf "'.$tmpArchiveFilepath.'" -C '.PIMCORE_PROJECT_ROOT, null, null, null, null),
+
             ],
             [
                 'description' => 'restore database',
-                'cmd' => Process::fromShellCommandline('mysql -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase().' < '.PIMCORE_PROJECT_ROOT.'/backup.sql')
+                'cmd' =>
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('mysql -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase().' < '.PIMCORE_PROJECT_ROOT.'/backup.sql', null, null, null, null) : new Process('mysql -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase().' < '.PIMCORE_PROJECT_ROOT.'/backup.sql', null, null, null, null)
             ],
             [
                 'description' => 'remove temporary files / clear cache',
                 'cmd' => new ParallelProcess(
-                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('rm '.PIMCORE_PROJECT_ROOT.'/backup.sql '.$tmpArchiveFilepath) : new Process('rm '.PIMCORE_PROJECT_ROOT.'/backup.sql '.$tmpArchiveFilepath),
-                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console cache:clear') : new Process(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console cache:clear'),
-                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console pimcore:cache:clear') : new Process(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console pimcore:cache:clear')
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('rm '.PIMCORE_PROJECT_ROOT.'/backup.sql '.$tmpArchiveFilepath, null, null, null, null) : new Process('rm '.PIMCORE_PROJECT_ROOT.'/backup.sql '.$tmpArchiveFilepath, null, null, null, null),
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console cache:clear', null, null, null, null) : new Process(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console cache:clear', null, null, null, null),
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console pimcore:cache:clear', null, null, null, null) : new Process(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console pimcore:cache:clear', null, null, null, null)
 
                 )
             ]
