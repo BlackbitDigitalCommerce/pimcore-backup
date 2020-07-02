@@ -45,17 +45,19 @@ class BackupCommand extends StorageCommand
             [
                 'description' => 'dump database / create an archive of the entire project root, excluding temporary files (parallel jobs)',
                 'cmd' => new ParallelProcess(
-                    Process::fromShellCommandline('tar --exclude=web/var/tmp --exclude=web/var/tmp --exclude=var/tmp --exclude=var/logs --exclude=var/cache --exclude=var/sessions -cf '.$tmpArchiveFilepath.' -C '.PIMCORE_PROJECT_ROOT.' .'),
-                    Process::fromShellCommandline('mysqldump --routines -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase().' -r '.$tmpDatabaseDump)
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('tar --exclude=web/var/tmp --exclude=web/var/tmp --exclude=var/tmp --exclude=var/logs --exclude=var/cache --exclude=var/sessions -cf '.$tmpArchiveFilepath.' -C '.PIMCORE_PROJECT_ROOT.' .') : new Process('tar --exclude=web/var/tmp --exclude=web/var/tmp --exclude=var/tmp --exclude=var/logs --exclude=var/cache --exclude=var/sessions -cf '.$tmpArchiveFilepath.' -C '.PIMCORE_PROJECT_ROOT.' .'),
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('mysqldump --routines -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase().' -r '.$tmpDatabaseDump) : new Process('mysqldump --routines -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase().' -r '.$tmpDatabaseDump)
+
                 )
             ],
             [
                 'description' => 'put the dump into the tar archive',
-                'cmd' => Process::fromShellCommandline('tar -rf '.$tmpArchiveFilepath.' -C '.dirname($tmpDatabaseDump).' '.$tmpFilename.'.sql --transform s/'.$tmpFilename.'.sql/backup.sql/')
+                'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('tar -rf '.$tmpArchiveFilepath.' -C '.dirname($tmpDatabaseDump).' '.$tmpFilename.'.sql --transform s/'.$tmpFilename.'.sql/backup.sql/') : new Process('tar -rf '.$tmpArchiveFilepath.' -C '.dirname($tmpDatabaseDump).' '.$tmpFilename.'.sql --transform s/'.$tmpFilename.'.sql/backup.sql/')
+
             ],
             [
                 'description' => 'zip the archive',
-                'cmd' => Process::fromShellCommandline('gzip '.$tmpArchiveFilepath)
+                'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('gzip '.$tmpArchiveFilepath) : new Process('gzip '.$tmpArchiveFilepath)
             ],
             [
                 'description' => 'save backup to '.$targetFilename,
@@ -89,7 +91,7 @@ class BackupCommand extends StorageCommand
             ],
             [
                 'description' => 'Remove temporary files',
-                'cmd' => Process::fromShellCommandline('rm '.$tmpDatabaseDump.' '.$tmpArchiveFilepath.'.gz')
+                'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('rm '.$tmpDatabaseDump.' '.$tmpArchiveFilepath.'.gz') : new Process('rm '.$tmpDatabaseDump.' '.$tmpArchiveFilepath.'.gz')
             ]
         ];
 

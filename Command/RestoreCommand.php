@@ -81,9 +81,10 @@ class RestoreCommand extends StorageCommand
             [
                 'description' => 'remove temporary files / clear cache',
                 'cmd' => new ParallelProcess(
-                    Process::fromShellCommandline('rm '.PIMCORE_PROJECT_ROOT.'/backup.sql '.$tmpArchiveFilepath),
-                    Process::fromShellCommandline(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console cache:clear'),
-                    Process::fromShellCommandline(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console pimcore:cache:clear')
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('rm '.PIMCORE_PROJECT_ROOT.'/backup.sql '.$tmpArchiveFilepath) : new Process('rm '.PIMCORE_PROJECT_ROOT.'/backup.sql '.$tmpArchiveFilepath),
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console cache:clear') : new Process(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console cache:clear'),
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console pimcore:cache:clear') : new Process(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console pimcore:cache:clear')
+
                 )
             ]
         ];
