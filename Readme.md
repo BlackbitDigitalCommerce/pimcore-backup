@@ -8,6 +8,8 @@ This plugin adds 2 commands to bin/console:
 ## Backup
 It is important to backup files and database at nearly the same point in time because some database entries refer to files (e.g. versions) and some files refer to database columns (e.g. data object fields). Thus the backup of the files and the database are done in parallel.
 
+Restorable data and logs do not get included in the dump to keep file sizes small.
+
 ### Storage configuration
 Multiple storage providers are supported (local storage, FTP, S3, Azure, Dropbox etc.). To configure the location of backups you have to add a service definition to your `app/config/services.yml`
 
