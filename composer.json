@@ -1,8 +1,15 @@
 {
   "name": "blackbit_digital_commerce/pimcore-backup",
-  "description": "Backup and restore Pimcore",
+  "description": "Backup and restore Pimcore projects",
   "license": "GPLv3",
   "type": "pimcore-bundle",
+  "authors": [
+    {
+      "name": "Blackbit",
+      "email": "info@blackbit.de",
+      "role": "Developer"
+    }
+  ],
   "autoload": {
     "psr-4": {
       "blackbit\\BackupBundle\\": ""
