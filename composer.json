@@ -1,5 +1,5 @@
 {
-  "name": "blackbit/pimcore-backup",
+  "name": "blackbit_digital_commerce/pimcore-backup",
   "description": "Backup and restore Pimcore",
   "license": "GPLv3",
   "type": "pimcore-bundle",
