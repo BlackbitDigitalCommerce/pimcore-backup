@@ -34,8 +34,14 @@ class BackupCommand extends StorageCommand
     {
         set_time_limit(0);
         $tmpFilename = \uniqid('', true);
-        $tmpArchiveFilepath = PIMCORE_SYSTEM_TEMP_DIRECTORY.'/'.$tmpFilename.'.tar';
-        $tmpDatabaseDump = PIMCORE_SYSTEM_TEMP_DIRECTORY.'/'.$tmpFilename.'.sql';
+
+        $tmpDirectory = PIMCORE_SYSTEM_TEMP_DIRECTORY;
+        if(disk_free_space($tmpDirectory) < disk_free_space(sys_get_temp_dir())) {
+            $tmpDirectory = sys_get_temp_dir();
+        }
+
+        $tmpArchiveFilepath = $tmpDirectory.'/'.$tmpFilename.'.tar';
+        $tmpDatabaseDump = $tmpDirectory.'/'.$tmpFilename.'.sql';
 
         $targetFilename = $input->getArgument('filename');
         if(empty($targetFilename)) {
@@ -51,23 +57,18 @@ class BackupCommand extends StorageCommand
 
         $dumpDatabaseDataCommand = 'mysql -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase().' -e \'SHOW TABLES WHERE `Tables_in_'.$this->connection->getDatabase().'` NOT LIKE "application_logs_%" AND `Tables_in_'.$this->connection->getDatabase().'` NOT LIKE "PLEASE_DELETE%" AND `Tables_in_'.$this->connection->getDatabase().'` NOT LIKE "application_logs" AND `Tables_in_'.$this->connection->getDatabase().'` NOT LIKE "cache" AND `Tables_in_'.$this->connection->getDatabase().'` NOT LIKE "cache_tags" AND `Tables_in_'.$this->connection->getDatabase().'` NOT LIKE "email_log" AND `Tables_in_'.$this->connection->getDatabase().'` NOT LIKE "http_error_log" AND `Tables_in_'.$this->connection->getDatabase().'` NOT LIKE "search_backend_data" AND `Tables_in_'.$this->connection->getDatabase().'` NOT LIKE "tmp_store"\' | grep -v Tables_in | xargs mysqldump'.($columnStatisticsSupported ? ' --column-statistics=0' : '').' --no-create-info --skip-triggers -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase().' >> '.$tmpDatabaseDump;
 
-        $tarFilesCommand = 'tar --exclude=web/var/tmp --exclude=web/var/tmp --exclude=var/tmp --exclude=var/logs --exclude=var/cache --exclude=var/sessions --exclude=var/application_logger -cf '.$tmpArchiveFilepath.' -C '.PIMCORE_PROJECT_ROOT.' .';
+        $addDumpToTarCommand = 'mv '.$tmpDatabaseDump.' '.PIMCORE_PROJECT_ROOT.'/backup.sql';
 
-        $addDumpToTarCommand = 'tar -rf '.$tmpArchiveFilepath.' -C '.dirname($tmpDatabaseDump).' '.$tmpFilename.'.sql --transform s/'.$tmpFilename.'.sql/backup.sql/';
+        $tarFilesCommand = 'tar --exclude=web/var/tmp --exclude=web/var/tmp --exclude=var/tmp --exclude=var/logs --exclude=var/cache --exclude=var/sessions --exclude=var/application_logger -czf '.$tmpArchiveFilepath.'.gz -C '.PIMCORE_PROJECT_ROOT.' .';
 
         $steps = [
             [
                 'description' => 'dump database structure',
-                'cmd' => new ParallelProcess(
-                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($dumpDatabaseStructureCommand, null, null, null, null) : new Process($dumpDatabaseStructureCommand, null, null, null, null)
-                )
+                'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($dumpDatabaseStructureCommand, null, null, null, null) : new Process($dumpDatabaseStructureCommand, null, null, null, null)
             ],
             [
-                'description' => 'dump database content / create an archive of the entire project root, excluding temporary files (parallel jobs)',
-                'cmd' => new ParallelProcess(
-                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($dumpDatabaseDataCommand, null, null, null, null) : new Process($dumpDatabaseDataCommand, null, null, null, null),
-                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($tarFilesCommand, null, null, null, null) : new Process($tarFilesCommand, null, null, null, null)
-                )
+                'description' => 'dump database content',
+                'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($dumpDatabaseDataCommand, null, null, null, null) : new Process($dumpDatabaseDataCommand, null, null, null, null)
             ],
             [
                 'description' => 'put the dump into the tar archive',
@@ -75,8 +76,8 @@ class BackupCommand extends StorageCommand
 
             ],
             [
-                'description' => 'zip the archive',
-                'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('gzip '.$tmpArchiveFilepath, null, null, null, null) : new Process('gzip '.$tmpArchiveFilepath, null, null, null, null)
+                'description' => 'backup files of entire project root, excluding temporary files',
+                'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($tarFilesCommand, null, null, null, null) : new Process($tarFilesCommand, null, null, null, null)
             ],
             [
                 'description' => 'save backup to '.$targetFilename,
@@ -107,32 +108,37 @@ class BackupCommand extends StorageCommand
                         return $this->successful;
                     }
                 }
-            ],
-            [
-                'description' => 'Remove temporary files',
-                'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('rm '.$tmpDatabaseDump.' '.$tmpArchiveFilepath.'.gz', null, null, null, null) : new Process('rm '.$tmpDatabaseDump.' '.$tmpArchiveFilepath.'.gz', null, null, null, null)
             ]
         ];
 
-        $progressBar = new ProgressBar($output, \count($steps));
+        $progressBar = new ProgressBar($output, \count($steps) + 1); // +1 because of cleanup step in finally block
         $progressBar->setMessage('Starting ...');
         $progressBar->setFormat('%current%/%max% [%bar%] %percent:3s%%, %message%');
         $progressBar->start();
-        foreach ($steps as $step) {
-            $progressBar->setMessage($step['description'].' ...');
+        try {
+            foreach ($steps as $step) {
+                $progressBar->setMessage($step['description'].' ...');
+                $progressBar->advance();
+
+                /** @var Process|ParallelProcess $command */
+                $command = $step['cmd'];
+                $command->run();
+
+                if (!$command->isSuccessful()) {
+                    if ($step['cmd'] instanceof Process) {
+                        throw new ProcessFailedException($step['cmd']);
+                    }
+
+                    throw new \Exception($step['description'].' failed');
+                }
+            }
+        } finally {
+            $progressBar->setMessage('Remove temporary files ...');
             $progressBar->advance();
 
-            /** @var Process|ParallelProcess $command */
-            $command = $step['cmd'];
-            $command->run();
-
-            if (!$command->isSuccessful()) {
-                if($step['cmd'] instanceof Process) {
-                    throw new ProcessFailedException($step['cmd']);
-                }
-
-                throw new \Exception($step['description'].' failed');
-            }
+            $command = 'rm -f '.$tmpDatabaseDump.' '.$tmpArchiveFilepath.' '.$tmpArchiveFilepath.'.gz '.PIMCORE_PROJECT_ROOT.'/backup.sql';
+            $cleanupProcess = method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($command, null, null, null, null) : new Process($command, null, null, null, null);
+            $cleanupProcess->run();
         }
 
         $progressBar->finish();

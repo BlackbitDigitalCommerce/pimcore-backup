@@ -38,7 +38,13 @@ class RestoreCommand extends StorageCommand
     {
         set_time_limit(0);
         $tmpFileName = \uniqid('', true);
-        $tmpArchiveFilepath = PIMCORE_SYSTEM_TEMP_DIRECTORY.'/'.$tmpFileName.'.tar.gz';
+
+        $tmpDirectory = PIMCORE_SYSTEM_TEMP_DIRECTORY;
+        if (disk_free_space($tmpDirectory) < disk_free_space(sys_get_temp_dir())) {
+            $tmpDirectory = sys_get_temp_dir();
+        }
+
+        $tmpArchiveFilepath = $tmpDirectory.'/'.$tmpFileName.'.tar.gz';
 
         $fileName = $input->getArgument('filename');
 
