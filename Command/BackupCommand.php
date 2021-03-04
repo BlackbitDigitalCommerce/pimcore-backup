@@ -51,10 +51,10 @@ class BackupCommand extends StorageCommand
             $targetFilename = 'backup_pimcore-'.date('YmdHi').'.tar.gz';
         }
 
-        $command = 'mysqldump --help|grep -- \'--column - statistics\'';
+        $command = 'mysqldump --help\'';
         $columnStatisticsSupportedCommand = method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($command) : new Process($command);
         $columnStatisticsSupportedCommand->run();
-        $columnStatisticsSupported = !empty($columnStatisticsSupportedCommand->getOutput());
+        $columnStatisticsSupported = strpos($columnStatisticsSupportedCommand->getOutput(), '--column-statistics') !== false;
 
         $dumpDatabaseStructureCommand = 'mysql -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase().' -e \'SHOW TABLES WHERE `Tables_in_'.$this->connection->getDatabase().'` NOT LIKE "application_logs_%" AND `Tables_in_'.$this->connection->getDatabase().'` NOT LIKE "PLEASE_DELETE%"\' | grep -v Tables_in | xargs mysqldump'.($columnStatisticsSupported ? ' --column-statistics=0' : '').' --no-data --routines -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase().' -r '.$tmpDatabaseDump;
 
