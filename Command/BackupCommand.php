@@ -29,7 +29,8 @@ class BackupCommand extends StorageCommand
             ->setName('backup:backup')
             ->setDescription('Backup all data')
             ->addArgument('filename', InputArgument::OPTIONAL, 'file name')
-            ->addOption('skip-versions', null, InputOption::VALUE_NONE, 'Skip version files');
+            ->addOption('skip-versions', null, InputOption::VALUE_NONE, 'Skip version files')
+            ->addOption('skip-assets', null, InputOption::VALUE_NONE, 'Skip asset files');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -61,7 +62,7 @@ class BackupCommand extends StorageCommand
 
         $addDumpToTarCommand = 'mv '.$tmpDatabaseDump.' '.PIMCORE_PROJECT_ROOT.'/backup.sql';
 
-        $tarFilesCommand = 'tar --exclude=web/var/tmp --exclude=web/var/tmp --exclude=var/tmp --exclude=var/logs --exclude=var/cache --exclude=var/sessions --exclude=var/application_logger'.($input->getOption('skip-versions')?' --exclude=var/versions':'').' -czf '.$tmpArchiveFilepath.'.gz -C '.PIMCORE_PROJECT_ROOT.' .';
+        $tarFilesCommand = 'tar --exclude=web/var/tmp --exclude=web/var/tmp --exclude=var/tmp --exclude=var/logs --exclude=var/cache --exclude=var/sessions --exclude=var/application_logger'.($input->getOption('skip-versions') ? ' --exclude=var/versions' : '').($input->getOption('skip-assets') ? ' --exclude=var/assets' : '').' -czf '.$tmpArchiveFilepath.'.gz -C '.PIMCORE_PROJECT_ROOT.' .';
 
         $steps = [
             [

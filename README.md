@@ -20,7 +20,7 @@ services:
         class: League\Flysystem\Adapter\Local
         arguments: ['/tmp']
 ```
-        
+
 Example for AWS S3 storage:
 ```yaml
 services:
