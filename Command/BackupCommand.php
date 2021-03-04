@@ -51,7 +51,7 @@ class BackupCommand extends StorageCommand
             $targetFilename = 'backup_pimcore-'.date('YmdHi').'.tar.gz';
         }
 
-        $command = 'mysqldump --help\'';
+        $command = 'mysqldump --help';
         $columnStatisticsSupportedCommand = method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($command) : new Process($command);
         $columnStatisticsSupportedCommand->run();
         $columnStatisticsSupported = strpos($columnStatisticsSupportedCommand->getOutput(), '--column-statistics') !== false;
