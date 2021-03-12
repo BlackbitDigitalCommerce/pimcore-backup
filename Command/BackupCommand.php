@@ -62,7 +62,7 @@ class BackupCommand extends StorageCommand
 
         $addDumpToTarCommand = 'mv '.$tmpDatabaseDump.' '.PIMCORE_PROJECT_ROOT.'/backup.sql';
 
-        $tarFilesCommand = 'touch '.$tmpArchiveFilepath.' && tar --exclude=web/var/tmp --exclude=web/var/tmp --exclude=var/tmp --exclude=var/logs --exclude=var/cache --exclude=var/sessions --exclude=var/application_logger'.($input->getOption('skip-versions') ? ' --exclude=var/versions' : '').($input->getOption('skip-assets') ? ' --exclude=var/assets' : '').' -czf '.$tmpArchiveFilepath.'.gz -C '.PIMCORE_PROJECT_ROOT.' .';
+        $tarFilesCommand = 'tar --exclude=web/var/tmp --exclude=var/tmp --exclude=var/logs --exclude=var/cache --exclude=var/sessions --exclude=var/application_logger'.($input->getOption('skip-versions') ? ' --exclude=var/versions' : '').($input->getOption('skip-assets') ? ' --exclude=var/assets' : '').' --warning=no-file-changed -czf '.$tmpArchiveFilepath.'.gz -C '.PIMCORE_PROJECT_ROOT.' .';
 
         $steps = [
             [
@@ -127,7 +127,7 @@ class BackupCommand extends StorageCommand
                 $command = $step['cmd'];
                 $command->run();
 
-                if (!$command->isSuccessful()) {
+                if (!$command->isSuccessful() && (strpos($step['cmd']->getCommandLine(), 'tar') !== 0 || $command->getExitCode() !== 1)) {
                     if ($step['cmd'] instanceof Process) {
                         throw new ProcessFailedException($step['cmd']);
                     }

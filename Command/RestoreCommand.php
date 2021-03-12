@@ -80,7 +80,7 @@ class RestoreCommand extends StorageCommand
             [
                 'description' => 'unzip backup to '.PIMCORE_PROJECT_ROOT,
                 'cmd' =>
-                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('tar -xzf "'.$tmpArchiveFilepath.'" -C '.PIMCORE_PROJECT_ROOT, null, null, null, null) : new Process('tar -xzf "'.$tmpArchiveFilepath.'" -C '.PIMCORE_PROJECT_ROOT, null, null, null, null),
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('tar -xzf "'.$tmpArchiveFilepath.'" -C "'.PIMCORE_PROJECT_ROOT.'"', null, null, null, null) : new Process('tar -xzf "'.$tmpArchiveFilepath.'" -C '.PIMCORE_PROJECT_ROOT, null, null, null, null),
 
             ],
             [
