@@ -17,13 +17,11 @@
   },
   "require": {
     "php": ">=7",
-    "league/flysystem":"1.*",
-    "league/flysystem-aws-s3-v3": "^1.0",
-    "spatie/flysystem-dropbox": "^1.0",
-    "league/flysystem-azure-blob-storage": "^0.1.4"
+    "league/flysystem":"2.*",
+    "spatie/flysystem-dropbox": "*"
   },
   "require-dev": {
-    "pimcore/pimcore":"5.*|6.*"
+    "pimcore/pimcore":"5.*|6.*|10.*"
   },
   "extra": {
     "pimcore": {

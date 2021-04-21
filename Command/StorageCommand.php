@@ -11,7 +11,7 @@
 
 namespace blackbit\BackupBundle\Command;
 
-use League\Flysystem\AdapterInterface;
+use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\Filesystem;
 use Pimcore\Console\AbstractCommand;
 use Pimcore\Db\Connection;
@@ -24,7 +24,7 @@ class StorageCommand extends AbstractCommand
     /** @var Connection */
     protected $connection;
 
-    public function __construct(AdapterInterface $filesystemAdapter, Connection $connection)
+    public function __construct(FilesystemAdapter $filesystemAdapter, Connection $connection)
     {
         parent::__construct();
         $this->filesystem = new Filesystem($filesystemAdapter);

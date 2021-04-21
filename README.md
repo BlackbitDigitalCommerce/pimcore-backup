@@ -36,7 +36,7 @@ services:
             }
       
     blackbit.backup.adapter:
-        class: League\Flysystem\AwsS3v3\AwsS3Adapter
+        class: League\Flysystem\AwsS3V3\AwsS3V3Adapter
         arguments: ['@blackbit.backup.s3Client', 'your-bucket-name', 'optional/path/prefix']
 ```
 

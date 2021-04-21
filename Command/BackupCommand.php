@@ -12,6 +12,7 @@
 namespace blackbit\BackupBundle\Command;
 
 use blackbit\BackupBundle\Tools\ParallelProcess;
+use Exception;
 use League\Flysystem\Filesystem;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
@@ -104,7 +105,12 @@ class BackupCommand extends StorageCommand
                     public function run($callback = null/*, array $env = array()*/)
                     {
                         $stream = fopen($this->archiveFilePath, 'rb');
-                        $this->successful = $this->fileSystem->putStream($this->targetFilename, $stream);
+                        try {
+                            $this->successful = true;
+                            $this->fileSystem->writeStream($this->targetFilename, $stream);
+                        } catch(Exception $e) {
+                            $this->successful = false;
+                        }
                     }
 
                     public function isSuccessful() {
