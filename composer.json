@@ -18,6 +18,7 @@
   "require": {
     "php": ">=7",
     "league/flysystem":"2.*",
+    "league/flysystem-aws-s3-v3": "*",
     "spatie/flysystem-dropbox": "*"
   },
   "require-dev": {

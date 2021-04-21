@@ -24,6 +24,6 @@ services:
     blackbit.backup.adapter:
         class: League\Flysystem\Local\LocalFilesystemAdapter
         arguments:
-            $root: '/tmp'
+            $location: '/tmp'
 
     League\Flysystem\AdapterInterface: '@blackbit.backup.adapter'
