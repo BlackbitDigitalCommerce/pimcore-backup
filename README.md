@@ -69,3 +69,5 @@ Backups can be restored by executing `bin/console backup:restore <filename>`. It
 When you want to sync a Pimcore system with another Pimcore system you can use the `backup:sync` command. You have to provide it an SSH handle and the Pimcore root directory path of the remote Pimcore system and it will sync the database, the files while keeping the current configuration in `/app/config`.
 
 Example call: `bin/console backup:sync user@hostname /var/www/html`
+
+For this to work source and target system have to have this bundle installed.
