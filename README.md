@@ -17,8 +17,9 @@ Example for local storage (path should be adjusted):
 ```yaml
 services:
     blackbit.backup.adapter:
-        class: League\Flysystem\Adapter\Local
-        arguments: ['/tmp']
+        class: League\Flysystem\Local\LocalFilesystemAdapter
+        arguments:
+            $location: '/tmp'
 ```
 
 Example for AWS S3 storage:
@@ -41,6 +42,16 @@ services:
 ```
 
 Please also see [the documentation for other configuration options](https://flysystem.thephpleague.com/docs/adapter/aws-s3/).
+
+#### Compatibility with Flysystem 1
+You can still use this bundle with Flysystem 1 if you cannot use Flysystem 2 because of another dependency which needs Flysystem 1. In this case please add the following configuration in your `app/config/services.yml`:
+```yaml
+services:
+    blackbit.backup.adapter:
+        class: League\Flysystem\Adapter\Local
+        arguments: ['/tmp']
+```
+Or adjust this for other Flysystem adapters.
 
 ### Backup execution
 Backups should be saved regularly. When you call `bin/console backup:backup` without parameter the backup archive file gets named `backup_pimcore-YYYYMMDDhhmm.tar.gz` (YYYYMMDDhhmm gets replaced by current date and time). Alternatively you can set the name yourself by providing an argument like `bin/console backup:backup backup.tar.gz`. This plugin does not care about deleting old backups, so keep an eye on available disk space.

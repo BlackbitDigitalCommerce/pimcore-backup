@@ -47,22 +47,22 @@ class SyncCommand extends AbstractCommand
 
         $steps = [
             [
-                'description' => 'fetching database dump from source system',
+                'description' => 'fetch database dump from source system',
                 'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($createBackupCommand, null, null, null, null) : new Process($createBackupCommand, null, null, null, null)
             ],
             [
-                'description' => 'saving current configuration',
+                'description' => 'save current configuration',
                 'cmd' =>
                     method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($backupConfigCommand, null, null, null, null) : new Process(
                         $backupConfigCommand, null, null, null, null
                     )
             ],
             [
-                'description' => 'fetching files from remote system',
+                'description' => 'fetch files from remote system',
                 'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($copyFilesCommand, null, null, null, null) : new Process($copyFilesCommand, null, null, null, null)
             ],
             [
-                'description' => 'restoring configuration',
+                'description' => 'restore configuration',
                 'cmd' =>
                     method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($restoreConfigCommand, null, null, null, null) : new Process(
                         $restoreConfigCommand, null, null, null, null
@@ -92,7 +92,7 @@ class SyncCommand extends AbstractCommand
                 }
             }
         } finally {
-            $progressBar->setMessage('Cleaning up ...');
+            $progressBar->setMessage('Clean up ...');
             $progressBar->advance();
 
             $cleanupCommand = 'rm -r '.$tmpDirectory.'/pimcore-tmp';

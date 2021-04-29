@@ -52,7 +52,12 @@ class BackupCommand extends StorageCommand
         $targetFilename = $input->getArgument('filename');
 
         if(strpos($targetFilename, '/') === 0) {
-            $this->filesystem = new Filesystem(new LocalFilesystemAdapter(dirname($targetFilename)));
+            try {
+                $this->filesystem = new Filesystem(new LocalFilesystemAdapter(dirname($targetFilename)));
+            } catch(\Throwable $e) {
+                $this->filesystem = new Filesystem(new \League\Flysystem\Adapter\Local(dirname($targetFilename)));
+            }
+            $targetFilename = basename($targetFilename);
         }
 
         if(empty($targetFilename) || substr($targetFilename, -1) === '/') {
@@ -95,6 +100,12 @@ class BackupCommand extends StorageCommand
                 'description' => 'backup files of entire project root, excluding temporary files',
                 'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($tarFilesCommand, null, null, null, null) : new Process($tarFilesCommand, null, null, null, null)
             ];
+        } else {
+            $tarFilesCommand = 'tar --warning=no-file-changed -czf '.$tmpArchiveFilepath.'.gz '.PIMCORE_PROJECT_ROOT.'/backup.sql';
+            $steps[] = [
+                'description' => 'zip database dump',
+                'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($tarFilesCommand, null, null, null, null) : new Process($tarFilesCommand, null, null, null, null)
+            ];
         }
 
         $steps[] = [
@@ -130,6 +141,10 @@ class BackupCommand extends StorageCommand
                 public function isSuccessful()
                 {
                     return $this->successful;
+                }
+
+                public function getCommandLine() {
+                    return '';
                 }
             }
         ];
