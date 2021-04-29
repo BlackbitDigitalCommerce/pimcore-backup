@@ -10,16 +10,17 @@ services:
         public: false
 
     blackbit\BackupBundle\Command\BackupCommand:
-        class: blackbit\BackupBundle\Command\BackupCommand
         arguments:
             $filesystemAdapter: '@blackbit.backup.adapter'
         tags: ['console.command']
 
     blackbit\BackupBundle\Command\RestoreCommand:
-        class: blackbit\BackupBundle\Command\RestoreCommand
         arguments:
             $filesystemAdapter: '@blackbit.backup.adapter'
-        tags: ['console.command']
+        tags: [ 'console.command' ]
+
+    blackbit\BackupBundle\Command\SyncCommand:
+        tags: [ 'console.command' ]
 
     blackbit.backup.adapter:
         class: League\Flysystem\Local\LocalFilesystemAdapter

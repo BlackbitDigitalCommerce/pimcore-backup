@@ -6,6 +6,7 @@ namespace blackbit\BackupBundle\Command;
 
 use blackbit\BackupBundle\Tools\ParallelProcess;
 use Pimcore\Console\AbstractCommand;
+use Pimcore\Db\Connection;
 use Pimcore\Tool\Console;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
@@ -17,6 +18,15 @@ use Symfony\Component\Process\Process;
 
 class SyncCommand extends AbstractCommand
 {
+    /** @var Connection */
+    private $connection;
+
+    public function __construct(Connection $connection)
+    {
+        parent::__construct();
+        $this->connection = $connection;
+    }
+
     protected function configure()
     {
         $this
@@ -24,7 +34,7 @@ class SyncCommand extends AbstractCommand
             ->setDescription('Sync data from another Pimcore system')
             ->addArgument('ssh-handle', InputArgument::REQUIRED, 'SSH handle to connect to other Pimcore system, e.g. user@domain.com - you have to be able to connect from here via ssh user@domain.com')
             ->addArgument('remote-root-path', InputArgument::REQUIRED, 'Pimcore root path on remote system, e.g. /var/www/html'
-            );;
+            );
 
     }
 
@@ -41,21 +51,40 @@ class SyncCommand extends AbstractCommand
         if(strpos($sshHandle, 'ssh ') === 0) {
             $sshHandle = substr($sshHandle, strlen('ssh '));
         }
+
+        chdir(PIMCORE_PROJECT_ROOT);
+
         $createBackupCommand = 'ssh '.$sshHandle.' "'.rtrim($input->getArgument('remote-root-path'), '/').'/bin/console backup:backup /tmp/pimcore-backup-sync.tar.gz --only-database"';
-        $copyFilesCommand = 'rsync -avz --delete --exclude="app/config/local" --exclude="var/cache" --exclude="web/var/tmp" --exclude="var/tmp" --exclude="var/sessions" '.$sshHandle.':'.$input->getArgument('remote-root-path').' '.PIMCORE_PROJECT_ROOT;
+        $fetchDatabaseDumpCommand = 'rsync -aq '.$sshHandle.':/tmp/pimcore-backup-sync.tar.gz '.rtrim(PIMCORE_PROJECT_ROOT, '/').'/';
+        $copyFilesCommand = 'rsync -azq --delete --exclude="app/config/local" --exclude="var/cache" --exclude="web/var/tmp" --exclude="var/tmp" --exclude="var/sessions" --exclude="var/application-logger" --exclude="var/logs" '.$sshHandle.':'.rtrim($input->getArgument('remote-root-path'), '/').'/ '.rtrim(PIMCORE_PROJECT_ROOT, '/').'/';
+        $restoreDatabaseCommand = 'tar -xzOf '.rtrim(PIMCORE_PROJECT_ROOT, '/').'/pimcore-backup-sync.tar.gz | mysql -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase();
 
         $steps = [
             [
-                'description' => 'fetch database dump from source system',
+                'description' => 'generate database dump of source system',
                 'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($createBackupCommand, null, null, null, null) : new Process($createBackupCommand, null, null, null, null)
             ],
             [
-                'description' => 'fetch files from remote system',
-                'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($copyFilesCommand, null, null, null, null) : new Process($copyFilesCommand, null, null, null, null)
+                'description' => 'fetch database dump from source system',
+                'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($fetchDatabaseDumpCommand, null, null, null, null) : new Process($fetchDatabaseDumpCommand, null, null, null, null)
+            ],
+            [
+                'description' => 'fetch database dump from source system',
+                'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($fetchDatabaseDumpCommand, null, null, null, null) : new Process($fetchDatabaseDumpCommand, null, null, null, null)
+            ],
+            [
+                'description' => 'fetch files from remote system / import database dump',
+                'cmd' => new ParallelProcess(
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($copyFilesCommand, null, null, null, null) : new Process($copyFilesCommand, null, null, null, null),
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($restoreDatabaseCommand, null, null, null, null) : new Process($restoreDatabaseCommand, null, null, null, null)
+                )
             ],
             [
                 'description' => 'clear cache',
                 'cmd' => new ParallelProcess(
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('rm -rf var/cache/*', null, null, null, null) : new Process(
+                        'rm -rf var/cache/*', null, null, null, null
+                    ),
                     method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console cache:clear', null, null, null, null) : new Process(
                         Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console cache:clear', null, null, null, null
                     ),
