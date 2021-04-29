@@ -1,9 +1,10 @@
-# Pimcore Backup
+# Pimcore Backup and Sync Bundle
 
-This plugin adds 2 commands to bin/console:
+This plugin adds 3 commands to bin/console:
 
 * `backup:backup` backups all necessary files and a database dump to a file
 * `backup:restore` restores Pimcore status based on a previously saved backup
+* `backup:sync` copy database and files between two Pimcore systems (e.g. to sync development from live system)
 
 ## Backup
 It is important to backup files and database at nearly the same point in time because some database entries refer to files (e.g. versions) and some files refer to database columns (e.g. data object fields). Thus the backup of the files and the database are done in parallel.
