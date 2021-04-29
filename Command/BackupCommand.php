@@ -14,6 +14,7 @@ namespace blackbit\BackupBundle\Command;
 use blackbit\BackupBundle\Tools\ParallelProcess;
 use Exception;
 use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -29,9 +30,10 @@ class BackupCommand extends StorageCommand
         $this
             ->setName('backup:backup')
             ->setDescription('Backup all data')
-            ->addArgument('filename', InputArgument::OPTIONAL, 'file name')
+            ->addArgument('filename', InputArgument::OPTIONAL, 'File name. If you provide an absolute path here (beginning with /) then the configured Flysystem adapter in service "blackbit.backup.adapter" get bypassed and instead the file gets created in the given directory. If you omit the file name, it will get automatically generated.')
             ->addOption('skip-versions', null, InputOption::VALUE_NONE, 'Skip version files')
-            ->addOption('skip-assets', null, InputOption::VALUE_NONE, 'Skip asset files');
+            ->addOption('skip-assets', null, InputOption::VALUE_NONE, 'Skip asset files')
+            ->addOption('only-database', null, InputOption::VALUE_NONE, 'Only create database dump');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -48,8 +50,15 @@ class BackupCommand extends StorageCommand
         $tmpDatabaseDump = $tmpDirectory.'/'.$tmpFilename.'.sql';
 
         $targetFilename = $input->getArgument('filename');
-        if(empty($targetFilename)) {
+
+        if(strpos($targetFilename, '/') === 0) {
+            $this->filesystem = new Filesystem(new LocalFilesystemAdapter(dirname($targetFilename)));
+        }
+
+        if(empty($targetFilename) || substr($targetFilename, -1) === '/') {
             $targetFilename = 'backup_pimcore-'.date('YmdHi').'.tar.gz';
+        } elseif(substr($targetFilename, -strlen('.tar.gz')) !== '.tar.gz') {
+            $targetFilename .= '.tar.gz';
         }
 
         $command = 'mysqldump --help';
@@ -78,46 +87,51 @@ class BackupCommand extends StorageCommand
                 'description' => 'put the dump into the tar archive',
                 'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($addDumpToTarCommand, null, null, null, null) : new Process($addDumpToTarCommand, null, null, null, null)
 
-            ],
-            [
+            ]
+        ];
+
+        if(!$input->getOption('only-database')) {
+            $steps[] = [
                 'description' => 'backup files of entire project root, excluding temporary files',
                 'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($tarFilesCommand, null, null, null, null) : new Process($tarFilesCommand, null, null, null, null)
-            ],
-            [
-                'description' => 'save backup to '.$targetFilename,
-                'cmd' => new class($this->filesystem, $targetFilename, $tmpArchiveFilepath.'.gz') {
-                    /** @var Filesystem */
-                    private $fileSystem;
+            ];
+        }
 
-                    private $targetFilename;
+        $steps[] = [
+            'description' => 'save backup to '.$targetFilename,
+            'cmd' => new class($this->filesystem, $targetFilename, $tmpArchiveFilepath.'.gz') {
+                /** @var Filesystem */
+                private $fileSystem;
 
-                    private $archiveFilePath;
+                private $targetFilename;
 
-                    private $successful = false;
+                private $archiveFilePath;
 
-                    public function __construct(Filesystem $fileSystem, $targetFilename, $tmpArchiveFilepath)
-                    {
-                        $this->fileSystem = $fileSystem;
-                        $this->archiveFilePath = $tmpArchiveFilepath;
-                        $this->targetFilename = $targetFilename;
-                    }
+                private $successful = false;
 
-                    public function run($callback = null/*, array $env = array()*/)
-                    {
-                        $stream = fopen($this->archiveFilePath, 'rb');
-                        try {
-                            $this->successful = true;
-                            $this->fileSystem->writeStream($this->targetFilename, $stream);
-                        } catch(Exception $e) {
-                            $this->successful = false;
-                        }
-                    }
+                public function __construct(Filesystem $fileSystem, $targetFilename, $tmpArchiveFilepath)
+                {
+                    $this->fileSystem = $fileSystem;
+                    $this->archiveFilePath = $tmpArchiveFilepath;
+                    $this->targetFilename = $targetFilename;
+                }
 
-                    public function isSuccessful() {
-                        return $this->successful;
+                public function run($callback = null/*, array $env = array()*/)
+                {
+                    $stream = fopen($this->archiveFilePath, 'rb');
+                    try {
+                        $this->successful = true;
+                        $this->fileSystem->writeStream($this->targetFilename, $stream);
+                    } catch (Exception $e) {
+                        $this->successful = false;
                     }
                 }
-            ]
+
+                public function isSuccessful()
+                {
+                    return $this->successful;
+                }
+            }
         ];
 
         $progressBar = new ProgressBar($output, \count($steps) + 1); // +1 because of cleanup step in finally block
