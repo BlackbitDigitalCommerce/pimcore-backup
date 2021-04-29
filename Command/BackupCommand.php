@@ -132,7 +132,13 @@ class BackupCommand extends StorageCommand
                     $stream = fopen($this->archiveFilePath, 'rb');
                     try {
                         $this->successful = true;
-                        $this->fileSystem->writeStream($this->targetFilename, $stream);
+
+                        try {
+                            $this->fileSystem->writeStream($this->targetFilename, $stream);
+                        } catch(\Exception $e) {
+                            $this->fileSystem->putStream($this->targetFilename, $stream);
+                        }
+
                     } catch (Exception $e) {
                         $this->successful = false;
                     }
