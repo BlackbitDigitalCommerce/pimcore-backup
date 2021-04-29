@@ -71,3 +71,9 @@ When you want to sync a Pimcore system with another Pimcore system you can use t
 Example call: `bin/console backup:sync user@hostname /var/www/html`
 
 For this to work source and target system have to have this bundle installed.
+
+### Customization
+When you want to execute project-specific things you can use this with an event listener. The following events get dispatched:
+
+* `backup.restore.stepFinished` - gets dispatched after every step during `backup:restore` and `backup:sync` command
+* `backup.restore.finished` - gets dispatched after complete backup is restored

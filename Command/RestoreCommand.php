@@ -22,6 +22,8 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
@@ -120,7 +122,17 @@ class RestoreCommand extends StorageCommand
             if (!$command->isSuccessful()) {
                 throw new ProcessFailedException($step['cmd']);
             }
+
+            $event = new GenericEvent(
+                [
+                    'step' => $step
+                ]
+            );
+            \Pimcore::getContainer()->get(EventDispatcher::class)->dispatch($event, 'backup.restore.stepFinished');
         }
+
+        $event = new GenericEvent();
+        \Pimcore::getContainer()->get(EventDispatcher::class)->dispatch($event, 'backup.restore.finished');
 
         $progressBar->finish();
 
