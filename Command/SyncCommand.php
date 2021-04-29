@@ -40,7 +40,7 @@ class SyncCommand extends AbstractCommand
         if(strpos($sshHandle, 'ssh ') === 0) {
             $sshHandle = substr($sshHandle, strlen('ssh '));
         }
-        $createBackupCommand = 'ssh '.$sshHandle.' "'.rtrim($input->getArgument('remote-root-path'), '/').'/bin/console app:backup /tmp/pimcore-backup-sync.tar.gz --only-database';
+        $createBackupCommand = 'ssh '.$sshHandle.' "'.rtrim($input->getArgument('remote-root-path'), '/').'/bin/console backup:backup /tmp/pimcore-backup-sync.tar.gz --only-database';
         $backupConfigCommand = 'mkdir -p '.$tmpDirectory.'/pimcore-tmp/app && cp -r '.PIMCORE_PROJECT_ROOT.'/app/config "$_"';
         $copyFilesCommand = 'scp '.$sshHandle.':'.$input->getArgument('remote-root-path').' '.PIMCORE_PROJECT_ROOT;
         $restoreConfigCommand = 'cp -r '.$tmpDirectory.'/pimcore-tmp/app/config '.PIMCORE_PROJECT_ROOT.'app/';
