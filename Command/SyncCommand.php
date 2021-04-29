@@ -6,6 +6,7 @@ namespace blackbit\BackupBundle\Command;
 
 use blackbit\BackupBundle\Tools\ParallelProcess;
 use Pimcore\Console\AbstractCommand;
+use Pimcore\Tool\Console;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -40,10 +41,8 @@ class SyncCommand extends AbstractCommand
         if(strpos($sshHandle, 'ssh ') === 0) {
             $sshHandle = substr($sshHandle, strlen('ssh '));
         }
-        $createBackupCommand = 'ssh '.$sshHandle.' "'.rtrim($input->getArgument('remote-root-path'), '/').'/bin/console backup:backup /tmp/pimcore-backup-sync.tar.gz --only-database';
-        $backupConfigCommand = 'mkdir -p '.$tmpDirectory.'/pimcore-tmp/app && cp -r '.PIMCORE_PROJECT_ROOT.'/app/config "$_"';
-        $copyFilesCommand = 'scp '.$sshHandle.':'.$input->getArgument('remote-root-path').' '.PIMCORE_PROJECT_ROOT;
-        $restoreConfigCommand = 'cp -r '.$tmpDirectory.'/pimcore-tmp/app/config '.PIMCORE_PROJECT_ROOT.'app/';
+        $createBackupCommand = 'ssh '.$sshHandle.' "'.rtrim($input->getArgument('remote-root-path'), '/').'/bin/console backup:backup /tmp/pimcore-backup-sync.tar.gz --only-database"';
+        $copyFilesCommand = 'rsync -avz --delete --exclude="app/config/local" --exclude="var/cache" --exclude="web/var/tmp" --exclude="var/tmp" --exclude="var/sessions" '.$sshHandle.':'.$input->getArgument('remote-root-path').' '.PIMCORE_PROJECT_ROOT;
 
         $steps = [
             [
@@ -51,21 +50,26 @@ class SyncCommand extends AbstractCommand
                 'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($createBackupCommand, null, null, null, null) : new Process($createBackupCommand, null, null, null, null)
             ],
             [
-                'description' => 'save current configuration',
-                'cmd' =>
-                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($backupConfigCommand, null, null, null, null) : new Process(
-                        $backupConfigCommand, null, null, null, null
-                    )
-            ],
-            [
                 'description' => 'fetch files from remote system',
                 'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($copyFilesCommand, null, null, null, null) : new Process($copyFilesCommand, null, null, null, null)
             ],
             [
-                'description' => 'restore configuration',
+                'description' => 'clear cache',
+                'cmd' => new ParallelProcess(
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console cache:clear', null, null, null, null) : new Process(
+                        Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console cache:clear', null, null, null, null
+                    ),
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console pimcore:cache:clear', null, null, null, null) : new Process(
+                        Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console pimcore:cache:clear', null, null, null, null
+                    )
+
+                )
+            ],
+            [
+                'description' => 'rebuild backend search index',
                 'cmd' =>
-                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($restoreConfigCommand, null, null, null, null) : new Process(
-                        $restoreConfigCommand, null, null, null, null
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console pimcore:search-backend-reindex', null, null, null, null) : new Process(
+                        Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console pimcore:search-backend-reindex', null, null, null, null
                     )
             ],
         ];

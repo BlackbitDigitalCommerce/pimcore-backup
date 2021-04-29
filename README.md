@@ -56,7 +56,15 @@ Or adjust this for other Flysystem adapters.
 ### Backup execution
 Backups should be saved regularly. When you call `bin/console backup:backup` without parameter the backup archive file gets named `backup_pimcore-YYYYMMDDhhmm.tar.gz` (YYYYMMDDhhmm gets replaced by current date and time). Alternatively you can set the name yourself by providing an argument like `bin/console backup:backup backup.tar.gz`. This plugin does not care about deleting old backups, so keep an eye on available disk space.
 
+If you only want to backup th database, you can use the option `--only-database`. The advantage in comparison to a default `mysqldump` command execution is that certain unimportant, automatically recreatable or temporary database tables are not written to the dump which results in smaller file size without any disadvantages.
+
 If you do not need versioning data, you can use the option `--skip-versions`.
+If you do not need assets, you can use the option `--skip-assets`.
 
 ### Restore
 Backups can be restored by executing `bin/console backup:restore <filename>`. It uses the same storage configuration as described above.
+
+### Sync between Pimcore systems
+When you want to sync a Pimcore system with another Pimcore system you can use the `backup:sync` command. You have to provide it an SSH handle and the Pimcore root directory path of the remote Pimcore system and it will sync the database, the files while keeping the current configuration in `/app/config`.
+
+Example call: `bin/console backup:sync user@hostname /var/www/html`
