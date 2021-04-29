@@ -24,7 +24,7 @@ class StorageCommand extends AbstractCommand
     /** @var Connection */
     protected $connection;
 
-    public function __construct(FilesystemAdapter $filesystemAdapter, Connection $connection)
+    public function __construct($filesystemAdapter, Connection $connection)
     {
         parent::__construct();
         $this->filesystem = new Filesystem($filesystemAdapter);
