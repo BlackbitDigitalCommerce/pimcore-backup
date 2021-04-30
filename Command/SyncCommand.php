@@ -11,9 +11,7 @@ use Pimcore\Tool\Console;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
@@ -129,7 +127,7 @@ class SyncCommand extends AbstractCommand
                 $event = new GenericEvent([
                     'step' => $step
                 ]);
-                \Pimcore::getContainer()->get(EventDispatcher::class)->dispatch($event, 'backup.restore.stepFinished');
+                \Pimcore::getEventDispatcher()->dispatch($event, 'backup.restore.stepFinished');
             }
         } finally {
             $progressBar->setMessage('Clean up ...');
@@ -145,7 +143,7 @@ class SyncCommand extends AbstractCommand
         }
 
         $event = new GenericEvent();
-        \Pimcore::getContainer()->get(EventDispatcher::class)->dispatch($event, 'backup.restore.finished');
+        \Pimcore::getEventDispatcher()->dispatch($event, 'backup.restore.finished');
 
         $progressBar->finish();
 

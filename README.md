@@ -76,7 +76,7 @@ For this to work source and target system have to have this bundle installed.
 In combination with the [Process Manager bundle](https://github.com/elements-at/ProcessManager) you are able to trigger a backup, restore or sync with another Pimcore system directly from the Pimcore backend.
 
 ### Customization
-When you want to execute project-specific things you can use this with an event listener. The following events get dispatched:
+If you want to execute project-specific things, you can use this with an event listener. The following events get dispatched:
 
 * `backup.restore.stepFinished` - gets dispatched after every step during `backup:restore` and `backup:sync` command
 * `backup.restore.finished` - gets dispatched after complete `backup:restore` and `backup:sync` commands are finished
