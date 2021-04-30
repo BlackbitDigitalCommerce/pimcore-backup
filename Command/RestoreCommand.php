@@ -128,11 +128,11 @@ class RestoreCommand extends StorageCommand
                     'step' => $step
                 ]
             );
-            \Pimcore::getEventDispatcher()->dispatch($event, 'backup.restore.stepFinished');
+            \Pimcore::getEventDispatcher()->dispatch('backup.restore.stepFinished', $event);
         }
 
         $event = new GenericEvent();
-        \Pimcore::getEventDispatcher()->dispatch($event, 'backup.restore.finished');
+        \Pimcore::getEventDispatcher()->dispatch('backup.restore.finished', $event);
 
         $progressBar->finish();
 

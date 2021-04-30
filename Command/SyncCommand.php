@@ -127,7 +127,7 @@ class SyncCommand extends AbstractCommand
                 $event = new GenericEvent([
                     'step' => $step
                 ]);
-                \Pimcore::getEventDispatcher()->dispatch($event, 'backup.restore.stepFinished');
+                \Pimcore::getEventDispatcher()->dispatch('backup.restore.stepFinished', $event);
             }
         } finally {
             $progressBar->setMessage('Clean up ...');
@@ -143,7 +143,7 @@ class SyncCommand extends AbstractCommand
         }
 
         $event = new GenericEvent();
-        \Pimcore::getEventDispatcher()->dispatch($event, 'backup.restore.finished');
+        \Pimcore::getEventDispatcher()->dispatch('backup.restore.finished', $event);
 
         $progressBar->finish();
 
