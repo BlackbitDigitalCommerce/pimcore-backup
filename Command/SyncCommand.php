@@ -82,8 +82,8 @@ class SyncCommand extends AbstractCommand
             [
                 'description' => 'clear cache',
                 'cmd' => new ParallelProcess(
-                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('rm -rf var/cache/*', null, null, null, null) : new Process(
-                        'rm -rf var/cache/*', null, null, null, null
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('rm -rf '.PIMCORE_SYMFONY_CACHE_DIRECTORY.'/*', null, null, null, null) : new Process(
+                        'rm -rf '.PIMCORE_SYMFONY_CACHE_DIRECTORY.'/*', null, null, null, null
                     ),
                     method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console cache:clear', null, null, null, null) : new Process(
                         Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console cache:clear', null, null, null, null
