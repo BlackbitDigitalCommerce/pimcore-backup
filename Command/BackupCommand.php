@@ -110,7 +110,7 @@ class BackupCommand extends StorageCommand
 
         $steps[] = [
             'description' => 'save backup to '.$targetFilename,
-            'cmd' => new class($this->filesystem, $targetFilename, $tmpArchiveFilepath.'.gz') {
+            'cmd' => new class($this->filesystem, $targetFilename, $tmpArchiveFilepath.'.gz', $output) {
                 /** @var Filesystem */
                 private $fileSystem;
 
@@ -120,11 +120,14 @@ class BackupCommand extends StorageCommand
 
                 private $successful = false;
 
-                public function __construct(Filesystem $fileSystem, $targetFilename, $tmpArchiveFilepath)
+                private $output;
+
+                public function __construct(Filesystem $fileSystem, $targetFilename, $tmpArchiveFilepath, $output)
                 {
                     $this->fileSystem = $fileSystem;
                     $this->archiveFilePath = $tmpArchiveFilepath;
                     $this->targetFilename = $targetFilename;
+                    $this->output = $output;
                 }
 
                 public function run($callback = null/*, array $env = array()*/)
@@ -136,10 +139,14 @@ class BackupCommand extends StorageCommand
                         try {
                             $this->fileSystem->writeStream($this->targetFilename, $stream);
                         } catch(\Exception $e) {
-                            $this->fileSystem->putStream($this->targetFilename, $stream);
+                            if(method_exists($this->fileSystem, 'putStream')) {
+                                $this->fileSystem->putStream($this->targetFilename, $stream);
+                            } else {
+                                throw $e;
+                            }
                         }
-
                     } catch (Exception $e) {
+                        $this->output->writeln($e->getMessage());
                         $this->successful = false;
                     }
                 }
