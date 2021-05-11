@@ -35,7 +35,7 @@ class SyncCommand extends AbstractCommand
             ->setDescription('Sync data from another Pimcore system')
             ->addArgument('ssh-handle', InputArgument::REQUIRED, 'SSH handle to connect to other Pimcore system, e.g. user@domain.com - you have to be able to connect from here via ssh user@domain.com')
             ->addArgument('remote-root-path', InputArgument::REQUIRED, 'Pimcore root path on remote system, e.g. /var/www/html')
-            ->addOption('ignore-files', InputOption::VALUE_REQUIRED, 'comma-separated list of files and directories to be ignored');
+            ->addOption('exclude', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'files and directories to be ignored, you can provide multiple paths to be ignored with --exclude path/1 --exclude path/2');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -57,7 +57,7 @@ class SyncCommand extends AbstractCommand
         $createBackupCommand = 'ssh '.$sshHandle.' "'.rtrim($input->getArgument('remote-root-path'), '/').'/bin/console backup:backup /tmp/pimcore-backup-sync.tar.gz --only-database"';
         $fetchDatabaseDumpCommand = 'rsync -aq '.$sshHandle.':/tmp/pimcore-backup-sync.tar.gz '.rtrim(PIMCORE_PROJECT_ROOT, '/').'/';
 
-        $ignoreFiles = array_filter(str_getcsv($input->getOption('ignore-files') ?? ''));
+        $ignoreFiles = array_filter($input->getOption('exclude'));
         $ignoreFiles[] = 'app/config/local';
         $ignoreFiles[] = 'var/cache';
         $ignoreFiles[] = 'web/var/tmp';
@@ -69,7 +69,7 @@ class SyncCommand extends AbstractCommand
             return ' --exclude "'.$path.'"';
         }, $ignoreFiles);
 
-        $copyFilesCommand = 'rsync -azq --delete'.$ignoreFiles.' '.$sshHandle.':'.rtrim($input->getArgument('remote-root-path'), '/').'/ '.rtrim(PIMCORE_PROJECT_ROOT, '/').'/';
+        $copyFilesCommand = 'rsync -azq --delete'.implode(' ', $ignoreFiles).' '.$sshHandle.':'.rtrim($input->getArgument('remote-root-path'), '/').'/ '.rtrim(PIMCORE_PROJECT_ROOT, '/').'/';
         $restoreDatabaseCommand = 'tar -xzOf '.rtrim(PIMCORE_PROJECT_ROOT, '/').'/pimcore-backup-sync.tar.gz | mysql -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase();
 
         $steps = [
