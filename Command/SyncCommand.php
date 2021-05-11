@@ -11,6 +11,7 @@ use Pimcore\Tool\Console;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\Process\Exception\ProcessFailedException;
@@ -33,9 +34,8 @@ class SyncCommand extends AbstractCommand
             ->setName('backup:sync')
             ->setDescription('Sync data from another Pimcore system')
             ->addArgument('ssh-handle', InputArgument::REQUIRED, 'SSH handle to connect to other Pimcore system, e.g. user@domain.com - you have to be able to connect from here via ssh user@domain.com')
-            ->addArgument('remote-root-path', InputArgument::REQUIRED, 'Pimcore root path on remote system, e.g. /var/www/html'
-            );
-
+            ->addArgument('remote-root-path', InputArgument::REQUIRED, 'Pimcore root path on remote system, e.g. /var/www/html')
+            ->addOption('ignore-files', InputOption::VALUE_REQUIRED, 'comma-separated list of files and directories to be ignored');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -56,7 +56,20 @@ class SyncCommand extends AbstractCommand
 
         $createBackupCommand = 'ssh '.$sshHandle.' "'.rtrim($input->getArgument('remote-root-path'), '/').'/bin/console backup:backup /tmp/pimcore-backup-sync.tar.gz --only-database"';
         $fetchDatabaseDumpCommand = 'rsync -aq '.$sshHandle.':/tmp/pimcore-backup-sync.tar.gz '.rtrim(PIMCORE_PROJECT_ROOT, '/').'/';
-        $copyFilesCommand = 'rsync -azq --delete --exclude="app/config/local" --exclude="var/cache" --exclude="web/var/tmp" --exclude="var/tmp" --exclude="var/sessions" --exclude="var/application-logger" --exclude="var/logs" '.$sshHandle.':'.rtrim($input->getArgument('remote-root-path'), '/').'/ '.rtrim(PIMCORE_PROJECT_ROOT, '/').'/';
+
+        $ignoreFiles = array_filter(str_getcsv($input->getOption('ignore-files') ?? ''));
+        $ignoreFiles[] = 'app/config/local';
+        $ignoreFiles[] = 'var/cache';
+        $ignoreFiles[] = 'web/var/tmp';
+        $ignoreFiles[] = 'var/tmp';
+        $ignoreFiles[] = 'var/sessions';
+        $ignoreFiles[] = 'var/application-logger';
+        $ignoreFiles[] = 'var/logs';
+        $ignoreFiles = array_map(static function($path) {
+            return ' --exclude "'.$path.'"';
+        }, $ignoreFiles);
+
+        $copyFilesCommand = 'rsync -azq --delete'.$ignoreFiles.' '.$sshHandle.':'.rtrim($input->getArgument('remote-root-path'), '/').'/ '.rtrim(PIMCORE_PROJECT_ROOT, '/').'/';
         $restoreDatabaseCommand = 'tar -xzOf '.rtrim(PIMCORE_PROJECT_ROOT, '/').'/pimcore-backup-sync.tar.gz | mysql -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase();
 
         $steps = [
