@@ -26,8 +26,15 @@ class Configuration implements ConfigurationInterface
      */
     public function getConfigTreeBuilder()
     {
-        $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('backup');
+        $kernelVersion = Kernel::MAJOR_VERSION;
+
+        if ($kernelVersion >= 5) {
+            $treeBuilder = new TreeBuilder('backup');
+            $rootNode = $treeBuilder->getRootNode();
+        } else {
+            $treeBuilder = new TreeBuilder();
+            $rootNode = $treeBuilder->root('backup');
+        }
 
         // Here you should define the parameters that are allowed to
         // configure your bundle. See the documentation linked above for
