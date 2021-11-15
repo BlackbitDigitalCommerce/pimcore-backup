@@ -66,7 +66,7 @@ If you do not need assets, you can use the option `--skip-assets`.
 Backups can be restored by executing `bin/console backup:restore <filename>`. It uses the same storage configuration as described above.
 
 ### Sync between Pimcore systems
-When you want to sync a Pimcore system with another Pimcore system you can use the `backup:sync` command. You have to provide it an SSH handle and the Pimcore root directory path of the remote Pimcore system and it will sync the database, the files while keeping the current configuration in `/app/config`.
+When you want to sync a Pimcore system with another Pimcore system you can use the `backup:sync` command (to be executed from the target system). You have to provide an SSH handle to the source system and the Pimcore root directory path of the remote Pimcore system and it will sync the database, the files while keeping the current configuration in `/app/config`.
 
 Example call: `bin/console backup:sync user@hostname /var/www/html`
 
