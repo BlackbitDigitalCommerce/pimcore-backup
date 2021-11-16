@@ -77,8 +77,6 @@ class BackupCommand extends StorageCommand
 
         $addDumpToTarCommand = 'mv '.$tmpDatabaseDump.' '.PIMCORE_PROJECT_ROOT.'/backup.sql';
 
-        $tarFilesCommand = 'tar --exclude=web/var/tmp --exclude=var/tmp --exclude=var/logs --exclude=var/cache --exclude=var/sessions --exclude=var/application-logger'.($input->getOption('skip-versions') ? ' --exclude=var/versions' : '').($input->getOption('skip-assets') ? ' --exclude=var/assets' : '').' --warning=no-file-changed -czf '.$tmpArchiveFilepath.'.gz -C '.PIMCORE_PROJECT_ROOT.' .';
-
         $steps = [
             [
                 'description' => 'dump database structure',
@@ -91,17 +89,17 @@ class BackupCommand extends StorageCommand
             [
                 'description' => 'put the dump into the tar archive',
                 'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($addDumpToTarCommand, null, null, null, null) : new Process($addDumpToTarCommand, null, null, null, null)
-
             ]
         ];
 
         if(!$input->getOption('only-database')) {
+            $tarFilesCommand = 'tar --exclude=web/var/tmp --exclude=var/tmp --exclude=var/logs --exclude=var/cache --exclude=var/sessions --exclude=var/application-logger'.($input->getOption('skip-versions') ? ' --exclude=var/versions' : '').($input->getOption('skip-assets') ? ' --exclude=var/assets' : '').' --warning=no-file-changed -czf '.$tmpArchiveFilepath.'.gz -C '.PIMCORE_PROJECT_ROOT.' .';
             $steps[] = [
                 'description' => 'backup files of entire project root, excluding temporary files',
                 'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($tarFilesCommand, null, null, null, null) : new Process($tarFilesCommand, null, null, null, null)
             ];
         } else {
-            $tarFilesCommand = 'tar --warning=no-file-changed -czf '.$tmpArchiveFilepath.'.gz '.PIMCORE_PROJECT_ROOT.'/backup.sql';
+            $tarFilesCommand = 'tar --warning=no-file-changed -czf '.$tmpArchiveFilepath.'.gz -C '.PIMCORE_PROJECT_ROOT.' backup.sql';
             $steps[] = [
                 'description' => 'zip database dump',
                 'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($tarFilesCommand, null, null, null, null) : new Process($tarFilesCommand, null, null, null, null)
