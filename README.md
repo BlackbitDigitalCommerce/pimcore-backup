@@ -65,6 +65,8 @@ If you do not need assets, you can use the option `--skip-assets`.
 ### Restore
 Backups can be restored by executing `bin/console backup:restore <filename>`. It uses the same storage configuration as described above.
 
+When you try to restore the database and get the error `ERROR 1419 (HY000): You do not have the SUPER privilege and binary logging is enabled (you *might* want to use the less safe log_bin_trust_function_creators variable)` please enable `log_bin_trust_function_creators` in the MySQL settings. This message appears when recreating triggers, functions etc. (even although the bundle removes the definers from the database dump).
+
 ### Sync between Pimcore systems
 When you want to sync a Pimcore system with another Pimcore system you can use the `backup:sync` command (to be executed from the target system). You have to provide an SSH handle to the source system and the Pimcore root directory path of the remote Pimcore system and it will sync the database, the files while keeping the current configuration in `/app/config`.
 
