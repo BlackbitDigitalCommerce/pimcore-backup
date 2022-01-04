@@ -55,7 +55,7 @@ class SyncCommand extends AbstractCommand
         chdir(PIMCORE_PROJECT_ROOT);
 
         $createBackupCommand = 'ssh '.$sshHandle.' "'.rtrim($input->getArgument('remote-root-path'), '/').'/bin/console backup:backup /tmp/pimcore-backup-sync.tar.gz --only-database"';
-        $fetchDatabaseDumpCommand = 'rsync -aq '.$sshHandle.':/tmp/pimcore-backup-sync.tar.gz '.rtrim(PIMCORE_PROJECT_ROOT, '/').'/';
+        $fetchDatabaseDumpCommand = 'rsync -aqs '.$sshHandle.':/tmp/pimcore-backup-sync.tar.gz '.rtrim(PIMCORE_PROJECT_ROOT, '/').'/';
 
         $ignoreFiles = array_filter($input->getOption('exclude'));
         $ignoreFiles[] = 'app/config/local';
@@ -69,7 +69,7 @@ class SyncCommand extends AbstractCommand
             return ' --exclude "'.$path.'"';
         }, $ignoreFiles);
 
-        $copyFilesCommand = 'rsync -azq --delete'.implode(' ', $ignoreFiles).' '.$sshHandle.':'.rtrim($input->getArgument('remote-root-path'), '/').'/ '.rtrim(PIMCORE_PROJECT_ROOT, '/').'/';
+        $copyFilesCommand = 'rsync -azqs --delete'.implode(' ', $ignoreFiles).' '.$sshHandle.':'.rtrim($input->getArgument('remote-root-path'), '/').'/ '.rtrim(PIMCORE_PROJECT_ROOT, '/').'/';
         $restoreDatabaseCommand = 'tar -xzOf '.rtrim(PIMCORE_PROJECT_ROOT, '/').'/pimcore-backup-sync.tar.gz | mysql -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase();
 
         $steps = [
