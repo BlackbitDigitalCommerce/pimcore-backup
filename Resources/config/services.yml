@@ -28,3 +28,7 @@ services:
             $location: '/tmp'
 
     League\Flysystem\AdapterInterface: '@blackbit.backup.adapter'
+
+    Blackbit\DataDirectorBundle\lib\Pim\EventDispatcher:
+        arguments: [ '@event_dispatcher' ]
+        public: true

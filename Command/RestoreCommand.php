@@ -12,6 +12,7 @@
 namespace blackbit\BackupBundle\Command;
 
 use AppBundle\Model\Object\Person;
+use blackbit\BackupBundle\Tools\EventDispatcher;
 use blackbit\BackupBundle\Tools\ParallelProcess;
 use League\Flysystem\Filesystem;
 use Pimcore\Console\AbstractCommand;
@@ -22,7 +23,6 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
@@ -131,11 +131,11 @@ class RestoreCommand extends StorageCommand
                     'step' => $step
                 ]
             );
-            \Pimcore::getEventDispatcher()->dispatch('backup.restore.stepFinished', $event);
+            \Pimcore::getContainer()->get(EventDispatcher::class)->dispatch($event, 'backup.restore.stepFinished');
         }
 
         $event = new GenericEvent();
-        \Pimcore::getEventDispatcher()->dispatch('backup.restore.finished', $event);
+        \Pimcore::getContainer()->get(EventDispatcher::class)->dispatch($event, 'backup.restore.finished');
 
         $progressBar->finish();
 

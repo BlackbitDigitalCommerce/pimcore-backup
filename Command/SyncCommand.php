@@ -4,6 +4,7 @@
 namespace blackbit\BackupBundle\Command;
 
 
+use blackbit\BackupBundle\Tools\EventDispatcher;
 use blackbit\BackupBundle\Tools\ParallelProcess;
 use Pimcore\Console\AbstractCommand;
 use Pimcore\Db\Connection;
@@ -140,7 +141,7 @@ class SyncCommand extends AbstractCommand
                 $event = new GenericEvent([
                     'step' => $step
                 ]);
-                \Pimcore::getEventDispatcher()->dispatch('backup.restore.stepFinished', $event);
+                \Pimcore::getContainer()->get(EventDispatcher::class)->dispatch($event, 'backup.restore.stepFinished');
             }
         } finally {
             $progressBar->setMessage('Clean up ...');
@@ -156,7 +157,7 @@ class SyncCommand extends AbstractCommand
         }
 
         $event = new GenericEvent();
-        \Pimcore::getEventDispatcher()->dispatch('backup.restore.finished', $event);
+        \Pimcore::getContainer()->get(EventDispatcher::class)->dispatch($event, 'backup.restore.finished');
 
         $progressBar->finish();
 
