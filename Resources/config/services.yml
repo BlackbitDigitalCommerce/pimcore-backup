@@ -29,6 +29,6 @@ services:
 
     League\Flysystem\AdapterInterface: '@blackbit.backup.adapter'
 
-    Blackbit\DataDirectorBundle\lib\Pim\EventDispatcher:
+    blackbit\BackupBundle\Tools\EventDispatcher:
         arguments: [ '@event_dispatcher' ]
         public: true
