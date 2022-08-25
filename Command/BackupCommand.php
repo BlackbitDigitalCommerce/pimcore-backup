@@ -93,7 +93,8 @@ class BackupCommand extends StorageCommand
         ];
 
         if(!$input->getOption('only-database')) {
-            $tarFilesCommand = 'tar --exclude=web/var/tmp --exclude=var/tmp --exclude=var/logs --exclude=var/cache --exclude=var/sessions --exclude=var/application-logger'.($input->getOption('skip-versions') ? ' --exclude=var/versions' : '').($input->getOption('skip-assets') ? ' --exclude=var/assets' : '').' --warning=no-file-changed -czf '.$tmpArchiveFilepath.'.gz -C '.PIMCORE_PROJECT_ROOT.' .';
+            $tarFilesCommand = 'tar --exclude='.str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_WEB_ROOT).'/var/tmp --exclude='.str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_SYSTEM_TEMP_DIRECTORY).' --exclude='.str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_LOG_DIRECTORY).' --exclude='.str_replace(PIMCORE_PROJECT_ROOT.'/', '',
+                    PIMCORE_SYMFONY_CACHE_DIRECTORY).' --exclude='.str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_PRIVATE_VAR).'/sessions --exclude='.str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_LOG_FILEOBJECT_DIRECTORY).''.($input->getOption('skip-versions') ? ' --exclude='.str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_PRIVATE_VAR).'/versions' : '').($input->getOption('skip-assets') ? ' --exclude='.str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_PRIVATE_VAR).'/assets' : '').' --warning=no-file-changed -czf '.$tmpArchiveFilepath.'.gz -C '.PIMCORE_PROJECT_ROOT.' .';
             $steps[] = [
                 'description' => 'backup files of entire project root, excluding temporary files',
                 'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($tarFilesCommand, null, null, null, null) : new Process($tarFilesCommand, null, null, null, null)
