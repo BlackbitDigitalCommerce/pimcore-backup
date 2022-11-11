@@ -11,7 +11,6 @@
 
 namespace blackbit\BackupBundle\Command;
 
-use AppBundle\Model\Object\Person;
 use blackbit\BackupBundle\Tools\EventDispatcher;
 use blackbit\BackupBundle\Tools\ParallelProcess;
 use League\Flysystem\Filesystem;

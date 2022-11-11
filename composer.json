@@ -17,9 +17,8 @@
   },
   "require": {
     "php": ">=7",
-    "league/flysystem":"1.*|2.*",
-    "league/flysystem-aws-s3-v3": "*",
-    "spatie/flysystem-dropbox": "*"
+    "league/flysystem":"1.*|2.*|3.*",
+    "league/flysystem-aws-s3-v3": "*"
   },
   "require-dev": {
     "pimcore/pimcore":"5.*|6.*|10.*"

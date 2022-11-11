@@ -12,7 +12,7 @@ It is important to backup files and database at nearly the same point in time be
 Restorable data and logs do not get included in the dump to keep file sizes small.
 
 ### Storage configuration
-Multiple storage providers are supported (local storage, FTP, S3, Azure, Dropbox etc.). To configure the location of backups you have to add a service definition to your `app/config/services.yml`
+Multiple storage providers are supported (local storage, FTP, S3, Azure etc.). To configure the location of backups you have to add a service definition to your `app/config/services.yml`
 
 Example for local storage (path should be adjusted):
 ```yaml
@@ -43,6 +43,8 @@ services:
 ```
 
 Please also see [the documentation for other configuration options](https://flysystem.thephpleague.com/docs/adapter/aws-s3/).
+
+To use other storage providers, please add the [flysystem adapter](https://flysystem.thephpleague.com/docs/#officially-supported-adapters) to your composer.json and configure `blackbit.backup.adapter` as documented. If you need help, feel free to contact [help@blackbit.de](mailto:help@blackbit.de).
 
 #### Compatibility with Flysystem 1
 You can still use this bundle with Flysystem 1 if you cannot use Flysystem 2 because of another dependency which needs Flysystem 1. In this case please add the following configuration in your `app/config/services.yml`:
