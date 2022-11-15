@@ -11,6 +11,8 @@ It is important to backup files and database at nearly the same point in time be
 
 Restorable data and logs do not get included in the dump to keep file sizes small.
 
+By default, the backup file gets created in `/tmp` folder. To change this, please read about [Storage configuration](#storage-configuration).
+
 ### Storage configuration
 Multiple storage providers are supported (local storage, FTP, S3, Azure etc.). To configure the location of backups you have to add a service definition to your `app/config/services.yml`
 
