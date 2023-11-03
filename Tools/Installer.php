@@ -25,25 +25,25 @@ use Psr\Log\LoggerInterface;
  * Time: 13:51
  * To change this template use File | Settings | File Templates.
  */
-class Installer extends AbstractInstaller {
-	public function canBeInstalled()
+class Installer extends AbstractInstaller
+{
+	public function canBeInstalled(): bool
     {
         return false;
     }
 
-    public function canBeUninstalled()
+    public function canBeUninstalled(): bool
     {
         return false;
     }
 
-	/**
-	 * @return boolean
-	 */
-	public function isInstalled() {
+	public function isInstalled(): bool
+    {
         return \is_writable(PIMCORE_SYSTEM_TEMP_DIRECTORY);
 	}
 
-	public function needsReloadAfterInstall(){
+	public function needsReloadAfterInstall(): bool
+    {
 		return false;
 	}
 }

@@ -6,8 +6,8 @@ namespace blackbit\BackupBundle\Command;
 
 use blackbit\BackupBundle\Tools\EventDispatcher;
 use blackbit\BackupBundle\Tools\ParallelProcess;
+use Doctrine\DBAL\Connection;
 use Pimcore\Console\AbstractCommand;
-use Pimcore\Db\Connection;
 use Pimcore\Tool\Console;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;

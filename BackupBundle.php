@@ -17,7 +17,7 @@ use Pimcore\Extension\Bundle\Installer\InstallerInterface;
 use Pimcore\Model\User\Permission\Definition;
 
 class BackupBundle extends AbstractPimcoreBundle {
-    public function getInstaller() {
+    public function getInstaller(): ?Installer {
         return new Installer();
     }
 }
