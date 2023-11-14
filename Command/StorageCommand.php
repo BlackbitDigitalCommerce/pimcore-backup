@@ -11,10 +11,10 @@
 
 namespace blackbit\BackupBundle\Command;
 
+use Doctrine\DBAL\Connection;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\Filesystem;
 use Pimcore\Console\AbstractCommand;
-use Pimcore\Db\Connection;
 
 class StorageCommand extends AbstractCommand
 {

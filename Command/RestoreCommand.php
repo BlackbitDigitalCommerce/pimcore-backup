@@ -49,6 +49,8 @@ class RestoreCommand extends StorageCommand
         $tmpArchiveFilepath = $tmpDirectory.'/'.$tmpFileName.'.tar.gz';
 
         $fileName = $input->getArgument('filename');
+        
+        $dbParams = $this->connection->getParams();
 
         $steps = [
             [
@@ -88,7 +90,7 @@ class RestoreCommand extends StorageCommand
             [
                 'description' => 'restore database',
                 'cmd' =>
-                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('mysql -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase().' < '.PIMCORE_PROJECT_ROOT.'/backup.sql', null, null, null, null) : new Process('mysql -u '.$this->connection->getUsername().' --password='.$this->connection->getPassword().' -h '.$this->connection->getHost().' '.$this->connection->getDatabase().' < '.PIMCORE_PROJECT_ROOT.'/backup.sql', null, null, null, null)
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('mysql -u '.$dbParams['user'].' --password='.$dbParams['password'].' -h '.$dbParams['host'].' '.$dbParams['dbname'].' < '.PIMCORE_PROJECT_ROOT.'/backup.sql', null, null, null, null) : new Process('mysql -u '.$dbParams['user'].' --password='.$dbParams['password'].' -h '.$dbParams['host'].' '.$dbParams['dbname'].' < '.PIMCORE_PROJECT_ROOT.'/backup.sql', null, null, null, null)
             ],
             [
                 'description' => 'remove temporary files / clear cache',
