@@ -105,6 +105,11 @@ class RestoreCommand extends StorageCommand
                 )
             ],
             [
+                'description' => 'rebuild class definitions',
+                'cmd' =>
+                    method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console pimcore:deployment:classes-rebuild --create-classes --delete-classes --no-interaction', null, null, null, null) : new Process(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console pimcore:deployment:classes-rebuild --create-classes --delete-classes --no-interaction', null, null, null, null)
+            ],
+            [
                 'description' => 'rebuild backend search index',
                 'cmd' =>
                     method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console pimcore:search-backend-reindex', null, null, null, null) : new Process(Console::getExecutable('php').' '.PIMCORE_PROJECT_ROOT.'/bin/console pimcore:search-backend-reindex', null, null, null, null)
