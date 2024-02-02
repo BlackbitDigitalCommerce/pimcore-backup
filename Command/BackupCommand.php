@@ -33,7 +33,8 @@ class BackupCommand extends StorageCommand
             ->addArgument('filename', InputArgument::OPTIONAL, 'File name. If you provide an absolute path here (beginning with /) then the configured Flysystem adapter in service "blackbit.backup.adapter" get bypassed and instead the file gets created in the given directory. If you omit the file name, it will get automatically generated.')
             ->addOption('skip-versions', null, InputOption::VALUE_NONE, 'Skip version files')
             ->addOption('skip-assets', null, InputOption::VALUE_NONE, 'Skip asset files')
-            ->addOption('only-database', null, InputOption::VALUE_NONE, 'Only create database dump');
+            ->addOption('only-database', null, InputOption::VALUE_NONE, 'Only create database dump')
+            ->addOption('exclude', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'files and directories to be ignored, you can provide multiple paths to be ignored with --exclude path/1 --exclude path/2');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -80,6 +81,25 @@ class BackupCommand extends StorageCommand
 
         $addDumpToTarCommand = 'mv '.$tmpDatabaseDump.' '.PIMCORE_PROJECT_ROOT.'/backup.sql';
 
+        $ignoreFilesOption = array_filter($input->getOption('exclude'));
+        $ignoreFiles = [];
+
+        array_map(static function($path) use (&$ignoreFiles) {
+            $ignoreFiles = array_merge($ignoreFiles, explode(',', $path));
+        }, $ignoreFilesOption);
+
+        $ignoreFiles[] = 'app/config/local';
+        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.' / ', '', PIMCORE_CACHE_DIRECTORY);
+        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.' / ', '', PIMCORE_SYMFONY_CACHE_DIRECTORY);
+        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.' / ', '', PIMCORE_WEB_ROOT).'/var/tmp';
+        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.' / ', '', PIMCORE_SYSTEM_TEMP_DIRECTORY);
+        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.' / ', '', PIMCORE_PRIVATE_VAR).'/sessions';
+        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.' / ', '', PIMCORE_LOG_FILEOBJECT_DIRECTORY);
+        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.' / ', '', PIMCORE_LOG_DIRECTORY);
+        $ignoreFiles = array_map(static function($path) {
+            return '--exclude "'.$path.'"';
+        }, $ignoreFiles);
+
         $steps = [
             [
                 'description' => 'dump database structure',
@@ -96,8 +116,7 @@ class BackupCommand extends StorageCommand
         ];
 
         if(!$input->getOption('only-database')) {
-            $tarFilesCommand = 'tar --exclude='.str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_WEB_ROOT).'/var/tmp --exclude='.str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_SYSTEM_TEMP_DIRECTORY).' --exclude='.str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_LOG_DIRECTORY).' --exclude='.str_replace(PIMCORE_PROJECT_ROOT.'/', '',
-                    PIMCORE_SYMFONY_CACHE_DIRECTORY).' --exclude='.str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_PRIVATE_VAR).'/sessions '.($input->getOption('skip-versions') ? ' --exclude='.str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_PRIVATE_VAR).'/versions' : '').($input->getOption('skip-assets') ? ' --exclude='.str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_PRIVATE_VAR).'/assets' : '').' --warning=no-file-changed -czf '.$tmpArchiveFilepath.'.gz -C '.PIMCORE_PROJECT_ROOT.' .';
+            $tarFilesCommand = 'tar '.implode(' ', $ignoreFiles).' '.($input->getOption('skip-versions') ? ' --exclude='.str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_PRIVATE_VAR).'/versions' : '').($input->getOption('skip-assets') ? ' --exclude='.str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_PRIVATE_VAR).'/assets' : '').' --warning=no-file-changed -czf '.$tmpArchiveFilepath.'.gz -C '.PIMCORE_PROJECT_ROOT.' .';
             $steps[] = [
                 'description' => 'backup files of entire project root, excluding temporary files',
                 'cmd' => method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline($tarFilesCommand, null, null, null, null) : new Process($tarFilesCommand, null, null, null, null)
