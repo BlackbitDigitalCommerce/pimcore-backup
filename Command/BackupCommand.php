@@ -89,13 +89,13 @@ class BackupCommand extends StorageCommand
         }, $ignoreFilesOption);
 
         $ignoreFiles[] = 'app/config/local';
-        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.' / ', '', PIMCORE_CACHE_DIRECTORY);
-        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.' / ', '', PIMCORE_SYMFONY_CACHE_DIRECTORY);
-        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.' / ', '', PIMCORE_WEB_ROOT).'/var/tmp';
-        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.' / ', '', PIMCORE_SYSTEM_TEMP_DIRECTORY);
-        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.' / ', '', PIMCORE_PRIVATE_VAR).'/sessions';
-        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.' / ', '', PIMCORE_LOG_FILEOBJECT_DIRECTORY);
-        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.' / ', '', PIMCORE_LOG_DIRECTORY);
+        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_CACHE_DIRECTORY);
+        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_SYMFONY_CACHE_DIRECTORY);
+        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_WEB_ROOT).'/var/tmp';
+        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_SYSTEM_TEMP_DIRECTORY);
+        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_PRIVATE_VAR).'/sessions';
+        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_LOG_FILEOBJECT_DIRECTORY);
+        $ignoreFiles[] = str_replace(PIMCORE_PROJECT_ROOT.'/', '', PIMCORE_LOG_DIRECTORY);
         $ignoreFiles = array_map(static function($path) {
             return '--exclude "'.$path.'"';
         }, $ignoreFiles);
